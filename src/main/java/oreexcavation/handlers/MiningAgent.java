@@ -182,7 +182,11 @@ public class MiningAgent
 					if(!player.isCreative())
 					{
 						player.getFoodStats().addExhaustion(toolProps.getExaustion());
-						XPHelper.addXP(player, -toolProps.getExperience());
+						
+						if(toolProps.getExperience() > 0)
+						{
+							XPHelper.addXP(player, -toolProps.getExperience(), false);
+						}
 					}
 					
 					for(int i = -1; i <= 1; i++)
@@ -202,6 +206,11 @@ public class MiningAgent
 		}
 		
 		timer.stop();
+		
+		if(!player.isCreative())
+		{
+			XPHelper.syncXP(player);
+		}
 		
 		return scheduled.size() <= 0 || mined.size() >= toolProps.getLimit();
 	}
