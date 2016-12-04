@@ -225,7 +225,7 @@ public class EventHandler
 	
 	public boolean isToolBlacklisted(ItemStack stack)
 	{
-		if(stack == null || stack.getItem() == null)
+		if(stack == null || stack.func_190926_b())
 		{
 			return false;
 		}

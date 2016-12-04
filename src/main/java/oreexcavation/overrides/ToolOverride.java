@@ -30,7 +30,7 @@ public class ToolOverride
 	
 	public boolean isApplicable(ItemStack stack)
 	{
-		if(stack == null)
+		if(stack == null || stack.func_190926_b())
 		{
 			return false;
 		}

@@ -26,7 +26,7 @@ public class ToolEffectiveCheck
 		{
 			ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
 			
-			if(held == null)
+			if(held == null || held.func_190926_b())
 			{
 				return false;
 			}

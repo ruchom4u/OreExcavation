@@ -59,7 +59,7 @@ public class MiningAgent
 			{
 				blockStack = (ItemStack)m_createStack.invoke(block, state);
 				
-				if(blockStack == null || blockStack.getItem() == null)
+				if(blockStack == null || blockStack.func_190926_b())
 				{
 					blockStack = null;
 				}
@@ -69,7 +69,7 @@ public class MiningAgent
 		this.subtypes = blockStack == null? true : !blockStack.getHasSubtypes();
 		
 		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
-		origTool = held == null? null : held.getItem();
+		origTool = held == null || held.func_190926_b()? null : held.getItem();
 		
 		if(held == null)
 		{
@@ -122,7 +122,7 @@ public class MiningAgent
 			}
 			
 			ItemStack heldStack = player.getHeldItem(EnumHand.MAIN_HAND);
-			Item heldItem = heldStack == null? null : heldStack.getItem();
+			Item heldItem = heldStack == null || heldStack.func_190926_b()? null : heldStack.getItem();
 			
 			if(heldItem != origTool)
 			{
@@ -165,7 +165,7 @@ public class MiningAgent
 					stack = (ItemStack)m_createStack.invoke(b, s);
 				} catch(Exception e){}
 				
-				if(stack != null && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
+				if(stack != null && stack.func_190926_b() && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
 				{
 					flag = true;
 				}
