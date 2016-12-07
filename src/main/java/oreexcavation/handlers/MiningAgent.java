@@ -165,7 +165,7 @@ public class MiningAgent
 					stack = (ItemStack)m_createStack.invoke(b, s);
 				} catch(Exception e){}
 				
-				if(stack != null && stack.func_190926_b() && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
+				if(stack != null && !stack.func_190926_b() && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
 				{
 					flag = true;
 				}

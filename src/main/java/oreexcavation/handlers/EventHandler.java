@@ -83,7 +83,7 @@ public class EventHandler
 		
 		EntityPlayerMP player = (EntityPlayerMP)event.getPlayer();
 		
-		if(player.getHeldItem(EnumHand.MAIN_HAND) == null && !ExcavationSettings.openHand)
+		if(player.getHeldItem(EnumHand.MAIN_HAND).func_190926_b() && !ExcavationSettings.openHand)
 		{
 			return;
 		} else if(isToolBlacklisted(player.getHeldItem(EnumHand.MAIN_HAND)) != ExcavationSettings.invertTBlacklist)
@@ -203,14 +203,14 @@ public class EventHandler
 			return true;
 		}
 		
-		Item itemBlock = Item.getItemFromBlock(block);
+		ItemStack blockStack = new ItemStack(Item.getItemFromBlock(block));
 		
-		if(itemBlock == null)
+		if(blockStack.func_190926_b())
 		{
 			return false;
 		}
 		
-		int[] oreIDs =  OreDictionary.getOreIDs(new ItemStack(block));
+		int[] oreIDs =  OreDictionary.getOreIDs(blockStack);
 		
 		for(int id : oreIDs)
 		{
