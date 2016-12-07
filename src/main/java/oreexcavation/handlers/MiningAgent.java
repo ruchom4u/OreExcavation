@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
@@ -244,7 +246,11 @@ public class MiningAgent
 		{
 			for(ItemStack stack : bigStack.getCombinedStacks())
 			{
-				if(!this.player.inventory.addItemStackToInventory(stack))
+				if(!ExcavationSettings.autoPickup)
+				{
+					EntityItem eItem = new EntityItem(this.player.worldObj, origin.getX(), origin.getY(), origin.getZ(), stack);
+					this.player.worldObj.spawnEntityInWorld(eItem);
+				} else if(!this.player.inventory.addItemStackToInventory(stack))
 				{
 					this.player.dropItem(stack, true, false);
 				} else
@@ -261,8 +267,15 @@ public class MiningAgent
 		
 		if(this.experience > 0)
 		{
-			this.player.addExperience(experience);
-            this.player.worldObj.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.1F, 0.5F * ((this.player.getRNG().nextFloat() - this.player.getRNG().nextFloat()) * 0.7F + 1.8F));
+			if(ExcavationSettings.autoPickup)
+			{
+				this.player.addExperience(experience);
+	            this.player.worldObj.playSound(null, player.posX, player.posY, player.posZ, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.1F, 0.5F * ((this.player.getRNG().nextFloat() - this.player.getRNG().nextFloat()) * 0.7F + 1.8F));
+			} else
+			{
+				EntityXPOrb orb = new EntityXPOrb(this.player.worldObj, origin.getX(), origin.getY(), origin.getZ(), experience);
+				this.player.worldObj.spawnEntityInWorld(orb);
+			}
 		}
 		
 		drops.clear();
