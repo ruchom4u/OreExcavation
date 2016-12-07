@@ -39,6 +39,7 @@ public class ConfigHandler
 		ExcavationSettings.toolClass = config.getBoolean("Only Standard Types", Configuration.CATEGORY_GENERAL, false, "Limit excavation to standard tool types (Picks, Shoves, Axes & Shears)");
 		ExcavationSettings.mineMode = config.getInt("Mode", Configuration.CATEGORY_GENERAL, 0, -1, 2, "Excavation mode (-1 Disabled, 0 = Keybind, 1 = Sneak, 2 = Always)");
 		ExcavationSettings.tpsGuard = config.getBoolean("TPS Guard", Configuration.CATEGORY_GENERAL, true, "Temporarily reduces excavation speed if TPS begins to slow down");
+		ExcavationSettings.autoPickup = config.getBoolean("Auto Pickup", Configuration.CATEGORY_GENERAL, false, "Skips spawning drops in world adding them directly to your inventory");
 		
 		String [] tbl = config.getStringList("Tool Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Tools blacklisted from excavating");
 		String [] bbl = config.getStringList("Block Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Blocks blacklisted from being excavated");
