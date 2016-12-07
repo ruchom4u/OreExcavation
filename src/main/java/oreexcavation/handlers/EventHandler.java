@@ -91,7 +91,7 @@ public class EventHandler
 		} else if(isBlockBlacklisted(event.block) != ExcavationSettings.invertBBlacklist)
 		{
 			return;
-		} else if(event.world.isAirBlock(event.x, event.y, event.z))
+		} else if(event.block.isAir(event.world, event.x, event.y, event.z))
 		{
 			return;
 		}

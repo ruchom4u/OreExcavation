@@ -140,10 +140,6 @@ public class MiningAgent
 			{
 				mined.add(pos);
 				continue;
-			} else if(player.worldObj.isAirBlock(pos.getX(), pos.getY(), pos.getZ()))
-			{
-				mined.add(pos);
-				continue;
 			}
 			
 			Block b = player.worldObj.getBlock(pos.getX(), pos.getY(), pos.getZ());

@@ -36,7 +36,10 @@ public class ToolEffectiveCheck
 			
 			for(String type : held.getItem().getToolClasses(held))
 			{
-				if(block.isToolEffective(type, metadata))
+				if(block.getHarvestTool(metadata).equals(type) && held.getItem().getHarvestLevel(held, type) >= block.getHarvestLevel(metadata))
+				{
+					return true;
+				} else if(block.isToolEffective(type, metadata)) // Demoted to a fallback check because it's dumb with redstone/obsidian
 				{
 					return true;
 				}
