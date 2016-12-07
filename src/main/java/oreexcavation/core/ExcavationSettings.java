@@ -31,4 +31,5 @@ public class ExcavationSettings
 	
 	public static List<String> toolBlacklist = new ArrayList<String>();
 	public static List<String> blockBlacklist = new ArrayList<String>();
+	public static boolean autoPickup = false;
 }
