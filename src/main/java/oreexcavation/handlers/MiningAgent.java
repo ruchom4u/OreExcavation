@@ -244,11 +244,12 @@ public class MiningAgent
 			{
 				if(!ExcavationSettings.autoPickup)
 				{
-					EntityItem eItem = new EntityItem(this.player.worldObj, origin.getX(), origin.getY(), origin.getZ(), stack);
+					EntityItem eItem = new EntityItem(this.player.worldObj, origin.getX() + 0.5D, origin.getY() + 0.5D, origin.getZ() + 0.5D, stack);
 					this.player.worldObj.spawnEntityInWorld(eItem);
 				} else
 				{
-					this.player.dropItem(stack, true, false);
+					EntityItem eItem = new EntityItem(this.player.worldObj, player.posX, player.posY, player.posZ, stack);
+					this.player.worldObj.spawnEntityInWorld(eItem);
 				}
 			}
 		}
