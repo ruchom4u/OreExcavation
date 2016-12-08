@@ -245,7 +245,8 @@ public class MiningAgent
 					this.player.worldObj.spawnEntityInWorld(eItem);
 				} else
 				{
-					this.player.dropPlayerItemWithRandomChoice(stack, false);
+					EntityItem eItem = new EntityItem(this.player.worldObj, player.posX, player.posY, player.posZ, stack);
+					this.player.worldObj.spawnEntityInWorld(eItem);
 				}
 			}
 		}
