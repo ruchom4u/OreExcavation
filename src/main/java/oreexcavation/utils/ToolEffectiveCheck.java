@@ -19,7 +19,7 @@ public class ToolEffectiveCheck
 			return false;
 		}
 		
-		if(!ExcavationSettings.openHand && player.getHeldItem(EnumHand.MAIN_HAND) == null)
+		if(!ExcavationSettings.openHand && player.getHeldItem(EnumHand.MAIN_HAND).func_190926_b())
 		{
 			return false;
 		} else if(ExcavationSettings.toolClass)
@@ -38,7 +38,7 @@ public class ToolEffectiveCheck
 			
 			for(String type : held.getItem().getToolClasses(held))
 			{
-				if(state.getBlock().getHarvestTool(state).equalsIgnoreCase(type) && held.getItem().getHarvestLevel(held, type, player, state) >= state.getBlock().getHarvestLevel(state))
+				if(type.equalsIgnoreCase(state.getBlock().getHarvestTool(state)) && held.getItem().getHarvestLevel(held, type, player, state) >= state.getBlock().getHarvestLevel(state))
 				{
 					return true;
 				} else if(state.getBlock().isToolEffective(type, state))
