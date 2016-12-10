@@ -38,7 +38,7 @@ public class ToolEffectiveCheck
 			
 			for(String type : held.getItem().getToolClasses(held))
 			{
-				if(state.getBlock().getHarvestTool(state).equalsIgnoreCase(type) && held.getItem().getHarvestLevel(held, type) >= state.getBlock().getHarvestLevel(state))
+				if(type.equalsIgnoreCase(state.getBlock().getHarvestTool(state)) && held.getItem().getHarvestLevel(held, type) >= state.getBlock().getHarvestLevel(state))
 				{
 					return true;
 				} else if(state.getBlock().isToolEffective(type, state))
