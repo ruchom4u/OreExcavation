@@ -28,8 +28,9 @@ public class ExcavationSettings
 	public static boolean toolClass = false;
 	public static boolean altTools = false;
 	public static boolean tpsGuard = true;
+	public static boolean autoPickup = false;
+	public static boolean allowShapes = true;
 	
 	public static List<String> toolBlacklist = new ArrayList<String>();
 	public static List<String> blockBlacklist = new ArrayList<String>();
-	public static boolean autoPickup = false;
 }

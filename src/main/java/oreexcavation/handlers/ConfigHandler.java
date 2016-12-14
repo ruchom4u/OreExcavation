@@ -6,7 +6,8 @@ import net.minecraftforge.common.config.Configuration;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.overrides.ToolOverrideHandler;
-import oreexcavation.utils.JsonIO;
+import oreexcavation.shapes.ShapeRegistry;
+import oreexcavation.utils.JsonHelper;
 import org.apache.logging.log4j.Level;
 import com.google.gson.JsonObject;
 
@@ -40,6 +41,7 @@ public class ConfigHandler
 		ExcavationSettings.mineMode = config.getInt("Mode", Configuration.CATEGORY_GENERAL, 0, -1, 2, "Excavation mode (-1 Disabled, 0 = Keybind, 1 = Sneak, 2 = Always)");
 		ExcavationSettings.tpsGuard = config.getBoolean("TPS Guard", Configuration.CATEGORY_GENERAL, true, "Temporarily reduces excavation speed if TPS begins to slow down");
 		ExcavationSettings.autoPickup = config.getBoolean("Auto Pickup", Configuration.CATEGORY_GENERAL, false, "Skips spawning drops in world adding them directly to your inventory");
+		ExcavationSettings.allowShapes = config.getBoolean("Allow Shapes", Configuration.CATEGORY_GENERAL, true, "Allow players to use shape mining");
 		
 		String [] tbl = config.getStringList("Tool Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Tools blacklisted from excavating");
 		String [] bbl = config.getStringList("Block Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Blocks blacklisted from being excavated");
@@ -56,14 +58,14 @@ public class ConfigHandler
 		
 		if(fileOverrides.exists())
 		{
-			ToolOverrideHandler.INSTANCE.loadOverrides(JsonIO.ReadFromFile(fileOverrides));
+			ToolOverrideHandler.INSTANCE.loadOverrides(JsonHelper.ReadFromFile(fileOverrides));
 		} else
 		{
 			JsonObject json = ToolOverrideHandler.INSTANCE.getDefaultOverrides();
-			JsonIO.WriteToFile(fileOverrides, json);
+			JsonHelper.WriteToFile(fileOverrides, json);
 			ToolOverrideHandler.INSTANCE.loadOverrides(json);
 		}
 		
-		OreExcavation.logger.log(Level.INFO, "Loaded configs...");
+		ShapeRegistry.INSTANCE.loadShapes(new File("config/oreexcavation_shapes.json"));
 	}
 }

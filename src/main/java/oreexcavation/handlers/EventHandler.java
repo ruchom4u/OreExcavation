@@ -1,5 +1,6 @@
 package oreexcavation.handlers;
 
+import org.lwjgl.input.Keyboard;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.item.EntityItem;
@@ -10,20 +11,25 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChatComponentText;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.oredict.OreDictionary;
 import oreexcavation.client.ExcavationKeys;
+import oreexcavation.client.GuiEditShapes;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.network.PacketExcavation;
+import oreexcavation.shapes.ExcavateShape;
+import oreexcavation.shapes.ShapeRegistry;
 import oreexcavation.utils.BlockPos;
 import oreexcavation.utils.ToolEffectiveCheck;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.InputEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -40,6 +46,34 @@ public class EventHandler
 		{
 			ConfigHandler.config.save();
 			ConfigHandler.initConfigs();
+		}
+	}
+	
+	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
+	public void onKeyPressed(InputEvent.KeyInputEvent event)
+	{
+		if(ExcavationKeys.shapeKey.isPressed())
+		{
+			Minecraft mc = Minecraft.getMinecraft();
+			
+			if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+			{
+				mc.displayGuiScreen(new GuiEditShapes());
+			} else
+			{
+				ShapeRegistry.INSTANCE.toggleShape();
+				
+				ExcavateShape shape = ShapeRegistry.INSTANCE.getActiveShape();
+				
+				if(shape == null)
+				{
+					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("Excavate Shape: NONE"));
+				} else
+				{
+					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new ChatComponentText("Excavate Shape: " + shape.getName()));
+				}
+			}
 		}
 	}
 	
