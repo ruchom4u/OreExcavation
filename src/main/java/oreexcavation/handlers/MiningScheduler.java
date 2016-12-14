@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import oreexcavation.core.ExcavationSettings;
+import oreexcavation.shapes.ExcavateShape;
 import com.google.common.base.Stopwatch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -41,7 +42,7 @@ public class MiningScheduler
 		agents.remove(player.getUniqueID());
 	}
 	
-	public void startMining(EntityPlayerMP player, BlockPos pos, IBlockState state)
+	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state, ExcavateShape shape)
 	{
 		MiningAgent existing = agents.get(player.getUniqueID());
 		
@@ -52,7 +53,16 @@ public class MiningScheduler
 		{
 			existing = new MiningAgent(player, pos, state);
 			agents.put(player.getUniqueID(), existing);
+			
+			if(shape != null)
+			{
+				existing.setShape(shape, ExcavateShape.getFacing(player));
+			}
+			
+			existing.init();
 		}
+		
+		return existing;
 	}
 	
 	public void tickAgents()
