@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
@@ -19,15 +20,20 @@ import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
 import oreexcavation.client.ExcavationKeys;
+import oreexcavation.client.GuiEditShapes;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.network.PacketExcavation;
+import oreexcavation.shapes.ExcavateShape;
+import oreexcavation.shapes.ShapeRegistry;
 import oreexcavation.utils.ToolEffectiveCheck;
+import org.lwjgl.input.Keyboard;
 
 public class EventHandler
 {
@@ -41,6 +47,34 @@ public class EventHandler
 		{
 			ConfigHandler.config.save();
 			ConfigHandler.initConfigs();
+		}
+	}
+	
+	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
+	public void onKeyPressed(InputEvent.KeyInputEvent event)
+	{
+		if(ExcavationKeys.shapeKey.isPressed())
+		{
+			Minecraft mc = Minecraft.getMinecraft();
+			
+			if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
+			{
+				mc.displayGuiScreen(new GuiEditShapes());
+			} else
+			{
+				ShapeRegistry.INSTANCE.toggleShape();
+				
+				ExcavateShape shape = ShapeRegistry.INSTANCE.getActiveShape();
+				
+				if(shape == null)
+				{
+					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new TextComponentString("Excavate Shape: NONE"));
+				} else
+				{
+					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new TextComponentString("Excavate Shape: " + shape.getName()));
+				}
+			}
 		}
 	}
 	

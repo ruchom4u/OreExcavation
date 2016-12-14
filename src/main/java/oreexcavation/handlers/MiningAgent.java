@@ -11,12 +11,14 @@ import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.overrides.ToolOverride;
 import oreexcavation.overrides.ToolOverrideHandler;
+import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.ToolEffectiveCheck;
 import oreexcavation.utils.XPHelper;
@@ -31,7 +33,10 @@ public class MiningAgent
 	private List<BlockPos> scheduled = new ArrayList<BlockPos>();
 	private final EntityPlayerMP player;
 	private final BlockPos origin;
+	private EnumFacing facing = EnumFacing.SOUTH;
+	private ExcavateShape shape = null;
 	
+	private IBlockState state;
 	private Block block;
 	private int meta;
 	
@@ -50,9 +55,13 @@ public class MiningAgent
 		this.player = player;
 		this.origin = origin;
 		
+		this.state = state;
 		this.block = state.getBlock();
 		this.meta = block.getMetaFromState(state);
-		
+	}
+	
+	public void init()
+	{
 		if(m_createStack != null)
 		{
 			try
@@ -94,6 +103,13 @@ public class MiningAgent
 				}
 			}
 		}
+	}
+	
+	public MiningAgent setShape(ExcavateShape shape, EnumFacing facing)
+	{
+		this.shape = shape;
+		this.facing = facing;
+		return this;
 	}
 	
 	/**
@@ -220,6 +236,9 @@ public class MiningAgent
 		{
 			return;
 		} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange())
+		{
+			return;
+		} else if(shape != null && !shape.isValid(origin, pos, facing))
 		{
 			return;
 		}

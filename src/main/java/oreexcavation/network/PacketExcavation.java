@@ -8,6 +8,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
@@ -19,6 +21,8 @@ import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.handlers.EventHandler;
 import oreexcavation.handlers.MiningScheduler;
+import oreexcavation.shapes.ExcavateShape;
+import oreexcavation.shapes.ShapeRegistry;
 import org.apache.logging.log4j.Level;
 
 public class PacketExcavation implements IMessage
@@ -90,12 +94,34 @@ public class PacketExcavation implements IMessage
 				return null;
 			}
 			
+			final ExcavateShape shape;
+			
+			if(message.tags.hasKey("shape"))
+			{
+				if(!ExcavationSettings.allowShapes)
+				{
+					player.addChatComponentMessage(new TextComponentString(TextFormatting.RED + "Shape mining has been disabled"));
+					return null;
+				}
+				
+				shape = new ExcavateShape();
+				shape.setMask(message.tags.getInteger("shape"));
+				
+				if(message.tags.hasKey("depth"))
+				{
+					shape.setMaxDepth(message.tags.getInteger("depth"));
+				}
+			} else
+			{
+				shape = null;
+			}
+			
 			player.getServer().addScheduledTask(new Runnable()
 			{
 				@Override
 				public void run()
 				{
-					MiningScheduler.INSTANCE.startMining(player, new BlockPos(x, y, z), state);
+					MiningScheduler.INSTANCE.startMining(player, new BlockPos(x, y, z), state, shape);
 				}
 			});
 			
@@ -124,6 +150,15 @@ public class PacketExcavation implements IMessage
 			}
 			
 			EventHandler.isExcavating = true;
+			
+			ExcavateShape shape = ShapeRegistry.INSTANCE.getActiveShape();
+			
+			if(shape != null)
+			{
+				message.tags.setInteger("shape", shape.getShapeMask());
+				message.tags.setInteger("depth", shape.getMaxDepth());
+			}
+			
 			return new PacketExcavation(message.tags);
 		}
 	}
