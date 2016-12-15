@@ -27,6 +27,8 @@ public class GuiEditShapes extends GuiScreen
 	private ExcavateShape curShape = null;
 	
 	private GuiTextField txtField = null;
+	private GuiNumberField nmbField = null;
+	
 	private GuiButton btnLeft = null;
 	private GuiButton btnRight = null;
 	private GuiButton btnAdd = null;
@@ -57,7 +59,8 @@ public class GuiEditShapes extends GuiScreen
 		btnRemove = new GuiButton(3, guiLeft + 86, guiTop + 222, 20, 20, "-");
 		btnRemove.packedFGColour = Color.RED.getRGB();
 		
-		txtField = new GuiTextField(mc.fontRenderer, guiLeft + 48, guiTop + 16, 160, 16);
+		txtField = new GuiTextField(mc.fontRenderer, guiLeft + 48, guiTop + 16, 112, 16);
+		nmbField = new GuiNumberField(mc.fontRenderer, guiLeft + 176, guiTop + 16, 32, 16);
 		
 		this.buttonList.add(btnLeft);
 		this.buttonList.add(btnRight);
@@ -76,14 +79,16 @@ public class GuiEditShapes extends GuiScreen
 		this.drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 256);
 		
 		txtField.drawTextBox();
+		nmbField.drawTextBox();
+		
 		super.drawScreen(mx, my, partialTick);
 		
 		GL11.glColor4f(1F, 1F, 1F, 1F);
-		mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
 		
 		if(curShape != null)
 		{
 			int mask = curShape.getShapeMask();
+			int off = curShape.getReticle();
 			
 			for(int x = 0; x < 5; x++)
 			{
@@ -93,6 +98,8 @@ public class GuiEditShapes extends GuiScreen
 					
 					if((mask & flag) != flag)
 					{
+						mc.renderEngine.bindTexture(TextureMap.locationBlocksTexture);
+						
 						// Draw stone scaled x2
 						GL11.glPushMatrix();
 						GL11.glTranslatef(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
@@ -100,17 +107,21 @@ public class GuiEditShapes extends GuiScreen
 						this.drawTexturedModelRectFromIcon(0, 0, Blocks.stone.getIcon(0, 0), 16, 16);
 						GL11.glPopMatrix();
 					}
+					
+					if(off == (y * 5) + x)
+					{
+						mc.renderEngine.bindTexture(GUI_ICO);
+						
+						// Draw reticle scaled x2
+						GL11.glPushMatrix();
+						GL11.glTranslatef(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
+						GL11.glScalef(2F, 2F, 1F);
+						this.drawTexturedModalRect(0, 0, 0, 0, 16, 16);
+						GL11.glPopMatrix();
+					}
 				}
 			}
 		}
-		
-		mc.renderEngine.bindTexture(GUI_ICO);
-		
-		GL11.glPushMatrix();
-		GL11.glTranslatef(guiLeft + 112, guiTop + 112, 0F);
-		GL11.glScalef(2F, 2F, 1F);
-		this.drawTexturedModalRect(0, 0, 0, 0, 16, 16);
-		GL11.glPopMatrix();
 	}
 	
 	@Override
@@ -136,10 +147,12 @@ public class GuiEditShapes extends GuiScreen
 		if(curShape != null)
 		{
 			txtField.setText(curShape.getName());
+			nmbField.setText("" + curShape.getMaxDepth());
 			btnRemove.enabled = true;
 		} else
 		{
 			txtField.setText("");
+			nmbField.setText("-1");
 			btnRemove.enabled = false;
 		}
 		
@@ -186,10 +199,12 @@ public class GuiEditShapes extends GuiScreen
 		super.keyTyped(c, keycode);
 		
 		txtField.textboxKeyTyped(c, keycode);
+		nmbField.textboxKeyTyped(c, keycode);
 		
 		if(curShape != null)
 		{
 			curShape.setName(txtField.getText());
+			curShape.setMaxDepth(nmbField.getNumber().intValue());
 		}
 	}
 	
@@ -199,15 +214,22 @@ public class GuiEditShapes extends GuiScreen
 		super.mouseClicked(mx, my, click);
 		
 		txtField.mouseClicked(mx, my, click);
+		nmbField.mouseClicked(mx, my, click);
 		
 		int x = (mx - guiLeft - 48)/32;
 		int y = (my - guiTop - 48)/32;
 		
-		if(curShape != null && click == 0 && mx - guiLeft >= 48 && x < 5 && my - guiTop >= 48 && y < 5)
+		if(curShape != null && mx - guiLeft >= 48 && x < 5 && my - guiTop >= 48 && y < 5)
 		{
-			int flag = ExcavateShape.posToMask(4 - x, 4 - y);
-			int mask = curShape.getShapeMask();
-			curShape.setMask(4- x, 4 - y, (mask & flag) != flag);
+			if(click == 0)
+			{
+				int flag = ExcavateShape.posToMask(4 - x, 4 - y);
+				int mask = curShape.getShapeMask();
+				curShape.setMask(4- x, 4 - y, (mask & flag) != flag);
+			} else if(click == 1)
+			{
+				curShape.setReticle(4 - x, 4 - y);
+			}
 		}
 	}
 }

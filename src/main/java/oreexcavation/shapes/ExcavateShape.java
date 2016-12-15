@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
 public class ExcavateShape
@@ -16,6 +17,7 @@ public class ExcavateShape
 	
 	private int shape = 0;
 	private int maxDepth = -1;
+	private byte reticle = 12; // Middle index
 	
 	public void setName(String value)
 	{
@@ -27,6 +29,16 @@ public class ExcavateShape
 		return name;
 	}
 	
+	public void setReticle(int x, int y)
+	{
+		this.reticle = (byte)MathHelper.clamp_int((y * 5) + x, 0, 24);
+	}
+	
+	public int getReticle()
+	{
+		return this.reticle;
+	}
+	
 	public void setMaxDepth(int value)
 	{
 		this.maxDepth = value;
@@ -34,7 +46,7 @@ public class ExcavateShape
 	
 	public int getMaxDepth()
 	{
-		return this.maxDepth < 0? Integer.MAX_VALUE : this.maxDepth;
+		return this.maxDepth;
 	}
 	
 	public int getShapeMask()
@@ -69,6 +81,7 @@ public class ExcavateShape
 	{
 		this.name = JsonHelper.GetString(json, "name", "New Shape");
 		this.maxDepth = JsonHelper.GetNumber(json, "depth", -1).intValue();
+		this.reticle = (byte)MathHelper.clamp_int(JsonHelper.GetNumber(json, "reticle", 12).byteValue(), 0, 24);
 		
 		JsonArray jmsk = JsonHelper.GetArray(json, "mask");
 		
@@ -101,7 +114,8 @@ public class ExcavateShape
 	public JsonObject writeToJson(JsonObject json)
 	{
 		json.addProperty("name", name);
-		json.addProperty("depth", maxDepth);
+		json.addProperty("depth", Math.max(-1, maxDepth));
+		json.addProperty("reticle", reticle);
 		
 		JsonArray jmsk = new JsonArray();
 		
@@ -135,9 +149,9 @@ public class ExcavateShape
 		int z = offset.getZ() - origin.getZ();
 		
 		BlockPos rotOff = counterRotate(new BlockPos(x, y, z), facing);
-		rotOff = rotOff.offset(2, 2, 0);
+		rotOff = rotOff.offset(reticle%5, reticle/5, 0);
 		
-		if(rotOff.getX() < 0 || rotOff.getX() >= 5 || rotOff.getY() < 0 || rotOff.getY() >= 5 || rotOff.getZ() < 0 || rotOff.getZ() > maxDepth)
+		if(rotOff.getX() < 0 || rotOff.getX() >= 5 || rotOff.getY() < 0 || rotOff.getY() >= 5 || rotOff.getZ() < 0 || (maxDepth >= 0 && rotOff.getZ() >= maxDepth))
 		{
 			return false;
 		}
