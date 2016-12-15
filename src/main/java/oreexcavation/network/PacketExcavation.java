@@ -111,6 +111,12 @@ public class PacketExcavation implements IMessage
 				{
 					shape.setMaxDepth(message.tags.getInteger("depth"));
 				}
+				
+				if(message.tags.hasKey("origin"))
+				{
+					int origin = message.tags.getInteger("origin");
+					shape.setReticle(origin%5, origin/5);
+				}
 			} else
 			{
 				shape = null;
@@ -157,6 +163,7 @@ public class PacketExcavation implements IMessage
 			{
 				message.tags.setInteger("shape", shape.getShapeMask());
 				message.tags.setInteger("depth", shape.getMaxDepth());
+				message.tags.setInteger("origin", shape.getReticle());
 			}
 			
 			return new PacketExcavation(message.tags);
