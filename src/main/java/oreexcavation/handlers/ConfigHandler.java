@@ -42,6 +42,7 @@ public class ConfigHandler
 		ExcavationSettings.tpsGuard = config.getBoolean("TPS Guard", Configuration.CATEGORY_GENERAL, true, "Temporarily reduces excavation speed if TPS begins to slow down");
 		ExcavationSettings.autoPickup = config.getBoolean("Auto Pickup", Configuration.CATEGORY_GENERAL, false, "Skips spawning drops in world adding them directly to your inventory");
 		ExcavationSettings.allowShapes = config.getBoolean("Allow Shapes", Configuration.CATEGORY_GENERAL, true, "Allow players to use shape mining");
+		ExcavationSettings.maxUndos = config.getInt("Max Undos", Configuration.CATEGORY_GENERAL, 3, 0, Integer.MAX_VALUE, "How many excavations should be kept in undo history (may lead to exploits)");
 		
 		String [] tbl = config.getStringList("Tool Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Tools blacklisted from excavating");
 		String [] bbl = config.getStringList("Block Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Blocks blacklisted from being excavated");

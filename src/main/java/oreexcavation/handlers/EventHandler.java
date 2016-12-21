@@ -1,6 +1,5 @@
 package oreexcavation.handlers;
 
-import org.lwjgl.input.Keyboard;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.item.EntityItem;
@@ -26,6 +25,7 @@ import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
 import oreexcavation.utils.BlockPos;
 import oreexcavation.utils.ToolEffectiveCheck;
+import org.lwjgl.input.Keyboard;
 import cpw.mods.fml.client.event.ConfigChangedEvent;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -51,7 +51,7 @@ public class EventHandler
 	
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)
-	public void onKeyPressed(InputEvent.KeyInputEvent event)
+	public void onKeyPressed(InputEvent event)
 	{
 		if(ExcavationKeys.shapeKey.isPressed())
 		{
@@ -109,7 +109,17 @@ public class EventHandler
 	@SubscribeEvent
 	public void onBlockBreak(BlockEvent.BreakEvent event)
 	{
-		if(event.world.isRemote || !(event.getPlayer() instanceof EntityPlayerMP) || event.getPlayer() instanceof FakePlayer)
+		if(event.world.isRemote)
+		{
+			return;
+		}
+		
+		if(captureAgent != null && !captureAgent.hasMinedPosition(new BlockPos(event.x, event.y, event.z)))
+		{
+			return; // Prevent unnecessary checks if an agent was responsible
+		}
+		
+		if(!(event.getPlayer() instanceof EntityPlayerMP) || event.getPlayer() instanceof FakePlayer)
 		{
 			return;
 		}
@@ -143,10 +153,6 @@ public class EventHandler
 				tag.setString("block", Block.blockRegistry.getNameForObject(event.block));
 				tag.setInteger("meta", event.blockMetadata);
 				OreExcavation.instance.network.sendTo(new PacketExcavation(tag), player);
-			} else
-			{
-				// Skip client side check
-				agent.appendBlock(new BlockPos(event.x, event.y, event.z));
 			}
 		}
 	}
@@ -165,7 +171,7 @@ public class EventHandler
 			return;
 		}
 		
-		MiningScheduler.INSTANCE.tickAgents();
+		MiningScheduler.INSTANCE.tickAgents(MinecraftServer.getServer());
 		captureAgent = null;
 	}
 

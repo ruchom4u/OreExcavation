@@ -14,6 +14,7 @@ public class ExcavationSettings
 	public static int mineRange = 16;
 	public static float exaustion = 0.1F;
 	public static int experience = 0;
+	public static int maxUndos = 3;
 	
 	/**
 	 * -1 Disabled, 0 = Keybind, 1 = Sneak, 2 = Always

@@ -11,11 +11,14 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.overrides.ToolOverride;
 import oreexcavation.overrides.ToolOverrideHandler;
 import oreexcavation.shapes.ExcavateShape;
+import oreexcavation.undo.BlockHistory;
+import oreexcavation.undo.ExcavateHistory;
 import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.BlockPos;
 import oreexcavation.utils.ToolEffectiveCheck;
@@ -27,12 +30,13 @@ public class MiningAgent
 {
 	private ItemStack blockStack = null;
 	private Item origTool = null; // Original tool the player was holding (must be the same to continue)
-	private List<BlockPos> mined = new ArrayList<BlockPos>();
-	private List<BlockPos> scheduled = new ArrayList<BlockPos>();
+	private final List<BlockPos> mined = new ArrayList<BlockPos>();
+	private final List<BlockPos> scheduled = new ArrayList<BlockPos>();
 	private final EntityPlayerMP player;
 	private final BlockPos origin;
 	private EnumFacing facing = EnumFacing.SOUTH;
 	private ExcavateShape shape = null;
+	private final ExcavateHistory history;
 	
 	private Block block;
 	private int meta;
@@ -54,6 +58,8 @@ public class MiningAgent
 		
 		this.block = block;
 		this.meta = meta;
+		
+		this.history = new ExcavateHistory(player.worldObj.provider.dimensionId);
 	}
 	
 	public void init()
@@ -180,12 +186,33 @@ public class MiningAgent
 			
 			if(flag)
 			{
+				player.worldObj.captureBlockSnapshots = true;
+				player.worldObj.capturedBlockSnapshots.clear();
+				
+				//BlockHistory blHist = history.recordPosition(player.worldObj, pos);
+				
 				if(!(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(player.worldObj, b, m, pos, player)))
 				{
 					mined.add(pos);
 					continue;
 				} else if(player.theItemInWorldManager.tryHarvestBlock(pos.getX(), pos.getY(), pos.getZ()))
 				{
+					player.worldObj.captureBlockSnapshots = false;
+					
+					EventHandler.captureAgent = null;
+					while(player.worldObj.capturedBlockSnapshots.size() > 0)
+					{
+						BlockSnapshot snap = player.worldObj.capturedBlockSnapshots.get(0);
+						if(pos.equals(new BlockPos(snap.x, snap.y, snap.z)))
+						{
+							history.addRecordedBlock(new BlockHistory(snap));
+						}
+						player.worldObj.capturedBlockSnapshots.remove(0);
+						
+						player.worldObj.markAndNotifyBlock(snap.x, snap.y, snap.z, player.worldObj.getChunkFromChunkCoords(snap.x >> 4, snap.y >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.flag);
+					}
+					EventHandler.captureAgent = this;
+					
 					if(!player.capabilities.isCreativeMode)
 					{
 						player.getFoodStats().addExhaustion(toolProps.getExaustion());
@@ -207,6 +234,9 @@ public class MiningAgent
 						}
 					}
 				}
+				
+				player.worldObj.capturedBlockSnapshots.clear();
+				player.worldObj.captureBlockSnapshots = false;
 				
 				mined.add(pos);
 			}
@@ -251,6 +281,9 @@ public class MiningAgent
 		// Temporarily halt any ongoing captures
 		MiningAgent ca = EventHandler.captureAgent;
 		EventHandler.captureAgent = null;
+		
+		history.setRecievedStacks(drops);
+		history.setRecievedXP(experience);
 		
 		for(BigItemStack bigStack : drops)
 		{
@@ -306,6 +339,16 @@ public class MiningAgent
 	public void addExperience(int value)
 	{
 		this.experience += value;
+	}
+	
+	public boolean hasMinedPosition(BlockPos pos)
+	{
+		return mined.contains(pos);
+	}
+	
+	public ExcavateHistory getHistory()
+	{
+		return history;
 	}
 	
 	private static Method m_createStack = null;

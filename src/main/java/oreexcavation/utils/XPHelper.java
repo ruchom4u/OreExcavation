@@ -17,9 +17,9 @@ public class XPHelper
 		}
 	}
 	
-	public static void addXP(EntityPlayer player, int xp, boolean sync)
+	public static void addXP(EntityPlayer player, long xp, boolean sync)
 	{
-		long experience = getPlayerXP(player) + (long)xp;
+		long experience = getPlayerXP(player) + xp;
 		player.experienceTotal = experience >= Integer.MAX_VALUE? Integer.MAX_VALUE : (int)experience;
 		player.experienceLevel = getXPLevel(experience);
 		long expForLevel = getLevelXP(player.experienceLevel);

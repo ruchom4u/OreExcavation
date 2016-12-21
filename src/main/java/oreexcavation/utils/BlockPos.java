@@ -36,6 +36,13 @@ public class BlockPos
 	@Override
 	public boolean equals(Object obj)
 	{
+		if(obj instanceof BlockPos)
+		{
+			BlockPos p2 = (BlockPos)obj;
+			
+			return p2.x == this.x && p2.y == this.y && p2.z == this.z;
+		}
+		
 		return false;
 	}
 }
