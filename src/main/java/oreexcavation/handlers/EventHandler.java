@@ -19,6 +19,7 @@ import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
@@ -52,7 +53,7 @@ public class EventHandler
 	
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)
-	public void onKeyPressed(InputEvent.KeyInputEvent event)
+	public void onKeyPressed(InputEvent event)
 	{
 		if(ExcavationKeys.shapeKey.isPressed())
 		{
@@ -110,7 +111,17 @@ public class EventHandler
 	@SubscribeEvent
 	public void onBlockBreak(BlockEvent.BreakEvent event)
 	{
-		if(event.getWorld().isRemote || !(event.getPlayer() instanceof EntityPlayerMP) || event.getPlayer() instanceof FakePlayer)
+		if(event.getWorld().isRemote)
+		{
+			return;
+		}
+		
+		if(captureAgent != null && !captureAgent.hasMinedPosition(event.getPos()))
+		{
+			return; // Prevent unnecessary checks if an agent was responsible
+		}
+		
+		if(!(event.getPlayer() instanceof EntityPlayerMP) || event.getPlayer() instanceof FakePlayer)
 		{
 			return;
 		}
@@ -149,9 +160,6 @@ public class EventHandler
 				tag.setString("block", Block.REGISTRY.getNameForObject(b).toString());
 				tag.setInteger("meta", m);
 				OreExcavation.instance.network.sendTo(new PacketExcavation(tag), player);
-			} else
-			{
-				agent.appendBlock(p);
 			}
 		}
 	}
@@ -170,7 +178,7 @@ public class EventHandler
 			return;
 		}
 		
-		MiningScheduler.INSTANCE.tickAgents();
+		MiningScheduler.INSTANCE.tickAgents(FMLCommonHandler.instance().getMinecraftServerInstance());
 		captureAgent = null;
 	}
 

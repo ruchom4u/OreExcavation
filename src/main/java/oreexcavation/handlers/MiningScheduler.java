@@ -2,15 +2,20 @@ package oreexcavation.handlers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.shapes.ExcavateShape;
+import oreexcavation.undo.ExcavateHistory;
+import oreexcavation.undo.RestoreResult;
 import com.google.common.base.Stopwatch;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 
 public class MiningScheduler
@@ -18,6 +23,9 @@ public class MiningScheduler
 	public static final MiningScheduler INSTANCE = new MiningScheduler();
 	
 	private HashMap<UUID,MiningAgent> agents = new HashMap<UUID,MiningAgent>();
+	private HashMap<UUID,ExcavateHistory> undoing = new HashMap<UUID,ExcavateHistory>();
+	private HashMap<UUID,List<ExcavateHistory>> undoHistory = new HashMap<UUID,List<ExcavateHistory>>();
+	
 	private Stopwatch timer;
 	
 	private MiningScheduler()
@@ -65,14 +73,51 @@ public class MiningScheduler
 		return existing;
 	}
 	
-	public void tickAgents()
+	public RestoreResult attemptUndo(EntityPlayer player)
 	{
-		List<Entry<UUID,MiningAgent>> list = new ArrayList<Entry<UUID,MiningAgent>>(agents.entrySet());
+		RestoreResult result = RestoreResult.NO_UNDO_HISTORY;
+		List<ExcavateHistory> list = undoHistory.get(player.getUniqueID());
+		list = list != null? list : new ArrayList<ExcavateHistory>();
 		
+		if(list.size() <= 0)
+		{
+			return RestoreResult.NO_UNDO_HISTORY;
+		} else
+		{
+			result = list.get(list.size() - 1).canRestore(player.getServer(), player);
+		}
+		
+		if(result == RestoreResult.SUCCESS)
+		{
+			undoing.put(player.getUniqueID(), list.remove(list.size() - 1));
+		}
+		
+		return result;
+	}
+	
+	public void appendHistory(UUID uuid, ExcavateHistory history)
+	{
+		List<ExcavateHistory> list = undoHistory.get(uuid);
+		list = list != null? list : new ArrayList<ExcavateHistory>();
+		
+		list.add(history);
+		
+		while(list.size() > ExcavationSettings.maxUndos)
+		{
+			list.remove(0);
+		}
+		
+		undoHistory.put(uuid, list);
+	}
+	
+	public void tickAgents(MinecraftServer server)
+	{
 		timer.reset();
 		timer.start();
 		
-		for(int i = list.size() - 1; i >= 0; i--)
+		Iterator<Entry<UUID,MiningAgent>> iterAgents = agents.entrySet().iterator();
+		
+		while(iterAgents.hasNext())
 		{
 			if(ExcavationSettings.tpsGuard && timer.elapsed(TimeUnit.MILLISECONDS) > 40)
 			{
@@ -80,7 +125,7 @@ public class MiningScheduler
 				break;
 			}
 			
-			Entry<UUID,MiningAgent> entry = list.get(i);
+			Entry<UUID,MiningAgent> entry = iterAgents.next();
 			
 			MiningAgent a = entry.getValue();
 			
@@ -91,7 +136,28 @@ public class MiningScheduler
 			if(complete)
 			{
 				a.dropEverything();
-				agents.remove(entry.getKey());
+				appendHistory(entry.getKey(), a.getHistory());
+				iterAgents.remove();
+			}
+		}
+		
+		Iterator<Entry<UUID,ExcavateHistory>> iterUndo = undoing.entrySet().iterator();
+		
+		while(iterUndo.hasNext())
+		{
+			if(ExcavationSettings.tpsGuard && timer.elapsed(TimeUnit.MILLISECONDS) > 40)
+			{
+				EventHandler.skipNext = true;
+				break;
+			}
+			
+			Entry<UUID,ExcavateHistory> entry = iterUndo.next();
+			
+			boolean complete = entry.getValue().tickRestore(server, server.getPlayerList().getPlayerByUUID(entry.getKey()));
+			
+			if(complete)
+			{
+				iterUndo.remove();
 			}
 		}
 		
@@ -101,5 +167,7 @@ public class MiningScheduler
 	public void resetAll()
 	{
 		agents.clear();
+		undoing.clear();
+		undoHistory.clear();
 	}
 }
