@@ -1,5 +1,7 @@
 package oreexcavation.core;
 
+import net.minecraft.command.ServerCommandManager;
+import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -8,6 +10,7 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import oreexcavation.core.proxies.CommonProxy;
@@ -53,5 +56,12 @@ public class OreExcavation
     @EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
+    }
+    
+    @EventHandler
+    public void onServerStart(FMLServerStartingEvent event)
+    {
+    	MinecraftServer server = event.getServer();
+    	((ServerCommandManager)server.getCommandManager()).registerCommand(new CommandUndo());
     }
 }
