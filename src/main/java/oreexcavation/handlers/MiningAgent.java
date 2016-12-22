@@ -326,7 +326,7 @@ public class MiningAgent
 	{
 		for(BigItemStack bigStack : drops)
 		{
-			if(bigStack.getBaseStack().isItemEqual(stack))
+			if(bigStack.equals(stack))
 			{
 				bigStack.stackSize += stack.func_190916_E();
 				return;
