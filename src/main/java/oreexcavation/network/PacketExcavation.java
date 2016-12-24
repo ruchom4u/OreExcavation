@@ -1,6 +1,5 @@
 package oreexcavation.network;
 
-import org.lwjgl.input.Keyboard;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
@@ -114,7 +113,7 @@ public class PacketExcavation implements IMessage
 				return null;
 			} else if(ExcavationSettings.mineMode == 0)
 			{
-				if(!Keyboard.isKeyDown(ExcavationKeys.excavateKey.getKeyCode()))
+				if(!ExcavationKeys.excavateKey.getIsKeyPressed())
 				{
 					return null;
 				}
