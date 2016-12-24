@@ -24,7 +24,6 @@ import oreexcavation.handlers.MiningScheduler;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
 import org.apache.logging.log4j.Level;
-import org.lwjgl.input.Keyboard;
 
 public class PacketExcavation implements IMessage
 {
@@ -147,7 +146,7 @@ public class PacketExcavation implements IMessage
 				return null;
 			} else if(ExcavationSettings.mineMode == 0)
 			{
-				if(!Keyboard.isKeyDown(ExcavationKeys.excavateKey.getKeyCode()))
+				if(!ExcavationKeys.excavateKey.isKeyDown())
 				{
 					return null;
 				}
