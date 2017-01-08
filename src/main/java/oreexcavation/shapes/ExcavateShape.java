@@ -31,7 +31,7 @@ public class ExcavateShape
 	
 	public void setReticle(int x, int y)
 	{
-		this.reticle = (byte)MathHelper.clamp_int((y * 5) + x, 0, 24);
+		this.reticle = (byte)MathHelper.clamp((y * 5) + x, 0, 24);
 	}
 	
 	public int getReticle()
@@ -81,7 +81,7 @@ public class ExcavateShape
 	{
 		this.name = JsonHelper.GetString(json, "name", "New Shape");
 		this.maxDepth = JsonHelper.GetNumber(json, "depth", -1).intValue();
-		this.reticle = (byte)MathHelper.clamp_int(JsonHelper.GetNumber(json, "reticle", 12).byteValue(), 0, 24);
+		this.reticle = (byte)MathHelper.clamp(JsonHelper.GetNumber(json, "reticle", 12).byteValue(), 0, 24);
 		
 		JsonArray jmsk = JsonHelper.GetArray(json, "mask");
 		

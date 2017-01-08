@@ -100,7 +100,7 @@ public class PacketExcavation implements IMessage
 			{
 				if(!ExcavationSettings.allowShapes)
 				{
-					player.addChatComponentMessage(new TextComponentString(TextFormatting.RED + "Shape mining has been disabled"), false);
+					player.sendStatusMessage(new TextComponentString(TextFormatting.RED + "Shape mining has been disabled"), false);
 					return null;
 				}
 				
@@ -150,7 +150,7 @@ public class PacketExcavation implements IMessage
 				{
 					return null;
 				}
-			} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getMinecraft().thePlayer.isSneaking())
+			} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getMinecraft().player.isSneaking())
 			{
 				return null;
 			}

@@ -63,7 +63,7 @@ public class MiningAgent
 		this.block = state.getBlock();
 		this.meta = block.getMetaFromState(state);
 		
-		this.history = new ExcavateHistory(player.worldObj.provider.getDimension());
+		this.history = new ExcavateHistory(player.world.provider.getDimension());
 	}
 	
 	public void init()
@@ -74,7 +74,7 @@ public class MiningAgent
 			{
 				blockStack = (ItemStack)m_createStack.invoke(block, state);
 				
-				if(blockStack == null || blockStack.func_190926_b())
+				if(blockStack == null || blockStack.isEmpty())
 				{
 					blockStack = null;
 				}
@@ -84,7 +84,7 @@ public class MiningAgent
 		this.subtypes = blockStack == null? true : !blockStack.getHasSubtypes();
 		
 		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
-		origTool = held == null || held.func_190926_b()? null : held.getItem();
+		origTool = held == null || held.isEmpty()? null : held.getItem();
 		
 		if(held == null)
 		{
@@ -144,7 +144,7 @@ public class MiningAgent
 			}
 			
 			ItemStack heldStack = player.getHeldItem(EnumHand.MAIN_HAND);
-			Item heldItem = heldStack == null || heldStack.func_190926_b()? null : heldStack.getItem();
+			Item heldItem = heldStack == null || heldStack.isEmpty()? null : heldStack.getItem();
 			
 			if(heldItem != origTool)
 			{
@@ -168,7 +168,7 @@ public class MiningAgent
 				continue;
 			}
 			
-			IBlockState s = player.worldObj.getBlockState(pos);
+			IBlockState s = player.world.getBlockState(pos);
 			Block b = s.getBlock();
 			int m = b.getMetaFromState(s);
 			
@@ -183,7 +183,7 @@ public class MiningAgent
 					stack = (ItemStack)m_createStack.invoke(b, s);
 				} catch(Exception e){}
 				
-				if(stack != null && !stack.func_190926_b() && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
+				if(stack != null && !stack.isEmpty() && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
 				{
 					flag = true;
 				}
@@ -191,28 +191,28 @@ public class MiningAgent
 			
 			if(flag)
 			{
-				player.worldObj.captureBlockSnapshots = true;
-				player.worldObj.capturedBlockSnapshots.clear();
+				player.world.captureBlockSnapshots = true;
+				player.world.capturedBlockSnapshots.clear();
 				
-				if(!(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(player.worldObj, s, pos, player)))
+				if(!(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(player.world, s, pos, player)))
 				{
 					mined.add(pos);
 					continue;
 				} else if(player.interactionManager.tryHarvestBlock(pos))
 				{
-					player.worldObj.captureBlockSnapshots = false;
+					player.world.captureBlockSnapshots = false;
 					
 					EventHandler.captureAgent = null;
-					while(player.worldObj.capturedBlockSnapshots.size() > 0)
+					while(player.world.capturedBlockSnapshots.size() > 0)
 					{
-						BlockSnapshot snap = player.worldObj.capturedBlockSnapshots.get(0);
+						BlockSnapshot snap = player.world.capturedBlockSnapshots.get(0);
 						if(pos.equals(snap.getPos()))
 						{
 							history.addRecordedBlock(new BlockHistory(snap));
 						}
-						player.worldObj.capturedBlockSnapshots.remove(0);
+						player.world.capturedBlockSnapshots.remove(0);
 						
-						player.worldObj.markAndNotifyBlock(snap.getPos(), player.worldObj.getChunkFromChunkCoords(snap.getPos().getX() >> 4, snap.getPos().getZ() >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.getFlag());
+						player.world.markAndNotifyBlock(snap.getPos(), player.world.getChunkFromChunkCoords(snap.getPos().getX() >> 4, snap.getPos().getZ() >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.getFlag());
 					}
 					EventHandler.captureAgent = this;
 					
@@ -291,12 +291,12 @@ public class MiningAgent
 			{
 				if(!ExcavationSettings.autoPickup)
 				{
-					EntityItem eItem = new EntityItem(this.player.worldObj, origin.getX() + 0.5D, origin.getY() + 0.5D, origin.getZ() + 0.5D, stack);
-					this.player.worldObj.spawnEntityInWorld(eItem);
+					EntityItem eItem = new EntityItem(this.player.world, origin.getX() + 0.5D, origin.getY() + 0.5D, origin.getZ() + 0.5D, stack);
+					this.player.world.spawnEntity(eItem);
 				} else
 				{
-					EntityItem eItem = new EntityItem(this.player.worldObj, player.posX, player.posY, player.posZ, stack);
-					this.player.worldObj.spawnEntityInWorld(eItem);
+					EntityItem eItem = new EntityItem(this.player.world, player.posX, player.posY, player.posZ, stack);
+					this.player.world.spawnEntity(eItem);
 				}
 			}
 		}
@@ -307,13 +307,13 @@ public class MiningAgent
 			
 			if(ExcavationSettings.autoPickup)
 			{
-				orb = new EntityXPOrb(this.player.worldObj, player.posX, player.posY, player.posZ, experience);
+				orb = new EntityXPOrb(this.player.world, player.posX, player.posY, player.posZ, experience);
 			} else
 			{
-				orb = new EntityXPOrb(this.player.worldObj, origin.getX(), origin.getY(), origin.getZ(), experience);
+				orb = new EntityXPOrb(this.player.world, origin.getX(), origin.getY(), origin.getZ(), experience);
 			}
 			
-			this.player.worldObj.spawnEntityInWorld(orb);
+			this.player.world.spawnEntity(orb);
 		}
 		
 		drops.clear();
@@ -328,7 +328,7 @@ public class MiningAgent
 		{
 			if(bigStack.equals(stack))
 			{
-				bigStack.stackSize += stack.func_190916_E();
+				bigStack.stackSize += stack.getCount();
 				return;
 			}
 		}

@@ -1,6 +1,5 @@
 package oreexcavation.utils;
 
-import oreexcavation.core.ExcavationSettings;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemShears;
@@ -9,6 +8,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IShearable;
+import oreexcavation.core.ExcavationSettings;
 
 public class ToolEffectiveCheck
 {
@@ -19,14 +19,14 @@ public class ToolEffectiveCheck
 			return false;
 		}
 		
-		if(!ExcavationSettings.openHand && player.getHeldItem(EnumHand.MAIN_HAND).func_190926_b())
+		if(!ExcavationSettings.openHand && player.getHeldItem(EnumHand.MAIN_HAND).isEmpty())
 		{
 			return false;
 		} else if(ExcavationSettings.toolClass)
 		{
 			ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
 			
-			if(held == null || held.func_190926_b())
+			if(held == null || held.isEmpty())
 			{
 				return false;
 			}

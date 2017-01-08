@@ -13,13 +13,13 @@ public class CommandUndo extends CommandBase
 {
 	
 	@Override
-	public String getCommandName()
+	public String getName()
 	{
 		return "undo_excavation";
 	}
 	
 	@Override
-	public String getCommandUsage(ICommandSender sender)
+	public String getUsage(ICommandSender sender)
 	{
 		return "/undo_excavation";
 	}
@@ -41,7 +41,7 @@ public class CommandUndo extends CommandBase
 	{
 		if(args.length != 0 || !(sender instanceof EntityPlayer))
 		{
-			throw new CommandException(getCommandUsage(sender));
+			throw new CommandException(getUsage(sender));
 		}
 		
 		if(ExcavationSettings.maxUndos <= 0)
@@ -55,19 +55,19 @@ public class CommandUndo extends CommandBase
 		switch(result)
 		{
 			case INVALID_XP:
-				sender.addChatMessage(new TextComponentTranslation("oreexcavation.undo.failed.xp"));
+				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.xp"));
 				break;
 			case INVALID_ITEMS:
-				sender.addChatMessage(new TextComponentTranslation("oreexcavation.undo.failed.items"));
+				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.items"));
 				break;
 			case NO_UNDO_HISTORY:
-				sender.addChatMessage(new TextComponentTranslation("oreexcavation.undo.failed.no_history"));
+				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.no_history"));
 				break;
 			case OBSTRUCTED:
-				sender.addChatMessage(new TextComponentTranslation("oreexcavation.undo.failed.obstructed"));
+				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.obstructed"));
 				break;
 			case SUCCESS:
-				sender.addChatMessage(new TextComponentTranslation("oreexcavation.undo.success"));
+				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.success"));
 				break;
 		}
 	}

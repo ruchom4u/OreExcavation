@@ -99,7 +99,7 @@ public class ExcavateHistory
 					{
 						if(stacks.get(n).equals(invoStack))
 						{
-							req[n] += invoStack.func_190916_E();
+							req[n] += invoStack.getCount();
 						}
 					}
 				}
@@ -149,7 +149,7 @@ public class ExcavateHistory
 					
 					if(invoStack != null && stack.equals(invoStack))
 					{
-						int num = Math.min(stack.stackSize, invoStack.func_190916_E());
+						int num = Math.min(stack.stackSize, invoStack.getCount());
 						player.inventory.decrStackSize(i, num);
 						stack.stackSize -= num;
 					}

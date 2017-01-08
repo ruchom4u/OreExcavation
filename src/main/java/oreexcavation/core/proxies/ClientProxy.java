@@ -1,9 +1,9 @@
 package oreexcavation.core.proxies;
 
+import net.minecraftforge.fml.relauncher.Side;
 import oreexcavation.client.ExcavationKeys;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.network.PacketExcavation;
-import net.minecraftforge.fml.relauncher.Side;
 
 
 public class ClientProxy extends CommonProxy

@@ -1,6 +1,5 @@
 package oreexcavation.handlers;
 
-import org.lwjgl.input.Keyboard;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -35,6 +34,7 @@ import oreexcavation.network.PacketExcavation;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
 import oreexcavation.utils.ToolEffectiveCheck;
+import org.lwjgl.input.Keyboard;
 
 public class EventHandler
 {
@@ -70,10 +70,10 @@ public class EventHandler
 				
 				if(shape == null)
 				{
-					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new TextComponentString("Excavate Shape: NONE"), false);
+					Minecraft.getMinecraft().player.sendStatusMessage(new TextComponentString("Excavate Shape: NONE"), false);
 				} else
 				{
-					Minecraft.getMinecraft().thePlayer.addChatComponentMessage(new TextComponentString("Excavate Shape: " + shape.getName()), false);
+					Minecraft.getMinecraft().player.sendStatusMessage(new TextComponentString("Excavate Shape: " + shape.getName()), false);
 				}
 			}
 		}
@@ -128,7 +128,7 @@ public class EventHandler
 		
 		EntityPlayerMP player = (EntityPlayerMP)event.getPlayer();
 		
-		if(player.getHeldItem(EnumHand.MAIN_HAND).func_190926_b() && !ExcavationSettings.openHand)
+		if(player.getHeldItem(EnumHand.MAIN_HAND).isEmpty() && !ExcavationSettings.openHand)
 		{
 			return;
 		} else if(isToolBlacklisted(player.getHeldItem(EnumHand.MAIN_HAND)) != ExcavationSettings.invertTBlacklist)
@@ -191,7 +191,7 @@ public class EventHandler
 	{
 		cTick = (cTick + 1)%10;
 		
-		if(cTick != 0 || Minecraft.getMinecraft().thePlayer == null || !isExcavating || !ExcavationSettings.mustHold)
+		if(cTick != 0 || Minecraft.getMinecraft().player == null || !isExcavating || !ExcavationSettings.mustHold)
 		{
 			return;
 		}
@@ -207,7 +207,7 @@ public class EventHandler
 			{
 				canContinue = false;
 			}
-		} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getMinecraft().thePlayer.isSneaking())
+		} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getMinecraft().player.isSneaking())
 		{
 			canContinue = false;
 		}
@@ -247,7 +247,7 @@ public class EventHandler
 		
 		ItemStack blockStack = new ItemStack(Item.getItemFromBlock(block));
 		
-		if(blockStack.func_190926_b())
+		if(blockStack.isEmpty())
 		{
 			return false;
 		}
@@ -267,7 +267,7 @@ public class EventHandler
 	
 	public boolean isToolBlacklisted(ItemStack stack)
 	{
-		if(stack == null || stack.func_190926_b())
+		if(stack == null || stack.isEmpty())
 		{
 			return false;
 		}

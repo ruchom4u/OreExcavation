@@ -1,11 +1,11 @@
 package oreexcavation.core.proxies;
 
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.relauncher.Side;
 import oreexcavation.client.UpdateNotification;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.handlers.EventHandler;
 import oreexcavation.network.PacketExcavation;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.relauncher.Side;
 
 public class CommonProxy
 {

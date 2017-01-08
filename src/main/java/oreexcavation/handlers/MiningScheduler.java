@@ -7,16 +7,16 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import oreexcavation.core.ExcavationSettings;
-import oreexcavation.shapes.ExcavateShape;
-import oreexcavation.undo.ExcavateHistory;
-import oreexcavation.undo.RestoreResult;
-import com.google.common.base.Stopwatch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import oreexcavation.core.ExcavationSettings;
+import oreexcavation.shapes.ExcavateShape;
+import oreexcavation.undo.ExcavateHistory;
+import oreexcavation.undo.RestoreResult;
+import com.google.common.base.Stopwatch;
 
 public class MiningScheduler
 {

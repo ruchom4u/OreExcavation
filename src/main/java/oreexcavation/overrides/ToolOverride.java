@@ -1,9 +1,9 @@
 package oreexcavation.overrides;
 
-import oreexcavation.core.ExcavationSettings;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
+import oreexcavation.core.ExcavationSettings;
 
 public class ToolOverride
 {
@@ -30,7 +30,7 @@ public class ToolOverride
 	
 	public boolean isApplicable(ItemStack stack)
 	{
-		if(stack == null || stack.func_190926_b())
+		if(stack == null || stack.isEmpty())
 		{
 			return false;
 		}

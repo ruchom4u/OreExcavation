@@ -3,7 +3,6 @@ package oreexcavation.client;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import org.lwjgl.input.Keyboard;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
@@ -14,6 +13,7 @@ import net.minecraft.util.math.MathHelper;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
+import org.lwjgl.input.Keyboard;
 
 public class GuiEditShapes extends GuiScreen
 {
@@ -139,7 +139,7 @@ public class GuiEditShapes extends GuiScreen
 			idx = 0;
 		} else
 		{
-			idx = MathHelper.clamp_int(idx, 0, ShapeRegistry.INSTANCE.getShapeList().size() - 1);
+			idx = MathHelper.clamp(idx, 0, ShapeRegistry.INSTANCE.getShapeList().size() - 1);
 			curShape = ShapeRegistry.INSTANCE.getShapeAt(idx + 1);
 		}
 		
