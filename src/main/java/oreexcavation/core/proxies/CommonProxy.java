@@ -1,10 +1,9 @@
 package oreexcavation.core.proxies;
 
-import oreexcavation.client.UpdateNotification;
+import net.minecraftforge.common.MinecraftForge;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.handlers.EventHandler;
 import oreexcavation.network.PacketExcavation;
-import net.minecraftforge.common.MinecraftForge;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.relauncher.Side;
 
@@ -20,7 +19,6 @@ public class CommonProxy
 		EventHandler handler = new EventHandler();
 		MinecraftForge.EVENT_BUS.register(handler);
 		FMLCommonHandler.instance().bus().register(handler);
-		FMLCommonHandler.instance().bus().register(new UpdateNotification());
 		
 		OreExcavation.instance.network.registerMessage(PacketExcavation.ServerHandler.class, PacketExcavation.class, 0, Side.SERVER);
 	}
