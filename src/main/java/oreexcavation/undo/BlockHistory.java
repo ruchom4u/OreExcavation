@@ -39,7 +39,6 @@ public class BlockHistory
 	
 	public void restoreBlock(World world)
 	{
-		System.out.println("Restoring " + state.getBlock().getLocalizedName());
 		world.setBlockState(pos, state, 2);
 		TileEntity tile = world.getTileEntity(pos);
 		

@@ -144,8 +144,6 @@ public class EventHandler
 		
 		BlockPos p = event.getPos();
 		IBlockState s = event.getState();
-		Block b = s.getBlock();
-		int m = b.getMetaFromState(s);
 		
 		if(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(event.getWorld(), s, p, player))
 		{
@@ -157,8 +155,7 @@ public class EventHandler
 				tag.setInteger("x", p.getX());
 				tag.setInteger("y", p.getY());
 				tag.setInteger("z", p.getZ());
-				tag.setString("block", Block.REGISTRY.getNameForObject(b).toString());
-				tag.setInteger("meta", m);
+				tag.setInteger("stateId", Block.getStateId(s));
 				OreExcavation.instance.network.sendTo(new PacketExcavation(tag), player);
 			}
 		}

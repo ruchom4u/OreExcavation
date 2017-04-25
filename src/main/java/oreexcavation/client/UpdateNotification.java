@@ -4,49 +4,94 @@ import java.io.BufferedInputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.event.ClickEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.Logger;
 
 public class UpdateNotification
 {
-	boolean hasChecked = false;
-	@SuppressWarnings("unused")
+	public static Future<String> checkThread;
+	
+	private static final String MOD_NAME = OreExcavation.NAME;
+	private static final String GIT_BRANCH = OreExcavation.BRANCH;
+	private static final String CUR_HASH = OreExcavation.HASH;
+	private static final String DEB_HASH = "CI_MOD_" + "HASH";
+	private static final String URL_UPDATE = "https://goo.gl/q9VC9j";
+	private static final String URL_DOWNLOAD = "http://minecraft.curseforge.com/projects/ore-excavation";
+	
+	private boolean hasChecked = false;
+	private final Logger logger;
+	private final boolean hidden;
+	
+	public static void startUpdateCheck()
+	{
+		if(CUR_HASH.equalsIgnoreCase(DEB_HASH))
+		{
+			return;
+		}
+		
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		
+		checkThread = executor.submit(new Callable<String>()
+		{
+			@Override
+			public String call() throws Exception
+			{
+				return getNotification(URL_UPDATE, true);
+			}
+		});
+	}
+	
+	public UpdateNotification()
+	{
+		this.logger = OreExcavation.logger;
+		this.hidden = ExcavationSettings.hideUpdates;
+	}
+	
 	@SubscribeEvent
+	@SideOnly(Side.CLIENT)
 	public void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event)
 	{
-		if(!OreExcavation.proxy.isClient() || hasChecked)
+		if(CUR_HASH.equalsIgnoreCase(DEB_HASH))
+		{
+			event.player.sendMessage(new TextComponentString(TextFormatting.RED + "THIS COPY OF " + MOD_NAME.toUpperCase() + " IS NOT FOR PUBLIC USE!"));
+			return;
+		}
+		
+		if(hasChecked || checkThread == null || !checkThread.isDone())
 		{
 			return;
 		}
 		
 		hasChecked = true;
 		
-		if(OreExcavation.HASH == "CI_MOD_" + "HASH")
+		if(hidden)
 		{
-			event.player.sendMessage(new TextComponentString(TextFormatting.RED + "THIS COPY OF " + OreExcavation.NAME.toUpperCase() + " IS NOT FOR PUBLIC USE!"));
 			return;
 		}
 		
 		try
 		{
-			String[] data = getNotification("https://goo.gl/q9VC9j", true);
-			
-			if(ExcavationSettings.hideUpdates)
-			{
-				return;
-			}
+			String[] data = checkThread.get().split("\\n");
 			
 			ArrayList<String> changelog = new ArrayList<String>();
 			boolean hasLog = false;
 			
 			for(String s : data)
 			{
-				if(s.equalsIgnoreCase("git_branch:" + OreExcavation.BRANCH))
+				if(s.equalsIgnoreCase("git_branch:" + GIT_BRANCH))
 				{
 					if(!hasLog)
 					{
@@ -74,8 +119,8 @@ public class UpdateNotification
 			
 			if(!hasLog || data.length < 2)
 			{
-				event.player.sendMessage(new TextComponentString(TextFormatting.RED + "An error has occured while checking " + OreExcavation.NAME + " version!"));
-				OreExcavation.logger.log(Level.ERROR, "An error has occured while checking " + OreExcavation.NAME + " version! (hasLog: " + hasLog + ", data: " + data.length + ")");
+				event.player.sendMessage(new TextComponentString(TextFormatting.RED + "An error has occured while checking " + MOD_NAME + " version!"));
+				logger.log(Level.ERROR, "An error has occured while checking " + MOD_NAME + " version! (hasLog: " + hasLog + ", data: " + data.length + ")");
 				return;
 			} else
 			{
@@ -85,12 +130,14 @@ public class UpdateNotification
 			
 			String hash = data[1].trim();
 			
-			boolean hasUpdate = !OreExcavation.HASH.equalsIgnoreCase(hash);
+			boolean hasUpdate = !CUR_HASH.equalsIgnoreCase(hash);
 			
 			if(hasUpdate)
 			{
-				event.player.sendMessage(new TextComponentString(TextFormatting.RED + "Update for " + OreExcavation.NAME + " available!"));
-				event.player.sendMessage(new TextComponentString("Download: http://minecraft.curseforge.com/projects/ore-excavation"));
+				event.player.sendMessage(new TextComponentString(TextFormatting.RED + "Update for " + MOD_NAME + " available!"));
+				TextComponentString dlUrl = new TextComponentString("Download: " + URL_DOWNLOAD);
+				dlUrl.getStyle().setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, URL_DOWNLOAD));
+				event.player.sendMessage(dlUrl);
 				
 				for(int i = 2; i < data.length; i++)
 				{
@@ -107,13 +154,13 @@ public class UpdateNotification
 			
 		} catch(Exception e)
 		{
-			event.player.sendMessage(new TextComponentString(TextFormatting.RED + "An error has occured while checking " + OreExcavation.NAME + " version!"));
-			OreExcavation.logger.log(Level.ERROR, "An error has occured while checking " + OreExcavation.NAME + " version!", e);
+			event.player.sendMessage(new TextComponentString(TextFormatting.RED + "An error has occured while checking " + MOD_NAME + " version!"));
+			logger.log(Level.ERROR, "An error has occured while checking " + MOD_NAME + " version!", e);
 			return;
 		}
 	}
 	
-	public static String[] getNotification(String link, boolean doRedirect) throws Exception
+	public static String getNotification(String link, boolean doRedirect) throws Exception
 	{
 		URL url = new URL(link);
 		HttpURLConnection.setFollowRedirects(false);
@@ -149,16 +196,11 @@ public class UpdateNotification
 		}
 		StringBuffer buffer = new StringBuffer();
 		int chars_read;
-		//	int total = 0;
 		while((chars_read = in.read()) != -1)
 		{
 			char g = (char)chars_read;
 			buffer.append(g);
 		}
-		final String page = buffer.toString();
-		
-		String[] pageSplit = page.split("\\n");
-		
-		return pageSplit;
+		return buffer.toString();
 	}
 }
