@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
@@ -51,7 +52,12 @@ public class PacketExcavation implements IMessage
 		@Override
 		public PacketExcavation onMessage(PacketExcavation message, MessageContext ctx)
 		{
-			EntityPlayerMP player = ctx.getServerHandler().playerEntity;
+			final EntityPlayerMP player = ctx.getServerHandler().playerEntity;
+			
+			if(player == null)
+			{
+				return null;
+			}
 			
 			if(message.tags.getBoolean("cancel"))
 			{
@@ -59,19 +65,19 @@ public class PacketExcavation implements IMessage
 				return null;
 			}
 			
-			int x = message.tags.getInteger("x");
-			int y = message.tags.getInteger("y");
-			int z = message.tags.getInteger("z");
+			final int x = message.tags.getInteger("x");
+			final int y = message.tags.getInteger("y");
+			final int z = message.tags.getInteger("z");
 			
-			Block block = (Block)Block.blockRegistry.getObject(message.tags.getString("block"));
-			int meta = message.tags.getInteger("meta");
+			final Block block = (Block)Block.blockRegistry.getObject(message.tags.getString("block"));
+			final int meta = message.tags.getInteger("meta");
 			
-			if(player == null || block == null)
+			if(block == null || block == Blocks.air)
 			{
 				return null;
 			}
 			
-			ExcavateShape shape = null;
+			final ExcavateShape shape;
 			
 			if(message.tags.hasKey("shape"))
 			{
@@ -94,6 +100,9 @@ public class PacketExcavation implements IMessage
 					int origin = message.tags.getInteger("origin");
 					shape.setReticle(origin%5, origin/5);
 				}
+			} else
+			{
+				shape = null;
 			}
 			
 			MiningScheduler.INSTANCE.startMining(player, new BlockPos(x, y, z), block, meta, shape);

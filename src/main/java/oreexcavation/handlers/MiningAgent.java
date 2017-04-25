@@ -260,7 +260,7 @@ public class MiningAgent
 		if(pos == null || mined.contains(pos) || scheduled.contains(pos))
 		{
 			return;
-		} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange())
+		} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange() || !player.canPlayerEdit(pos.getX(), pos.getY(), pos.getZ(), facing.ordinal(), player.getHeldItem()))
 		{
 			return;
 		} else if(shape != null && !shape.isValid(origin, pos, facing))
