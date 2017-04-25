@@ -5,8 +5,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
@@ -53,10 +53,14 @@ public class PacketExcavation implements IMessage
 	public static class ServerHandler implements IMessageHandler<PacketExcavation,PacketExcavation>
 	{
 		@Override
-		@SuppressWarnings("deprecation")
 		public PacketExcavation onMessage(PacketExcavation message, MessageContext ctx)
 		{
 			final EntityPlayerMP player = ctx.getServerHandler().playerEntity;
+			
+			if(player == null)
+			{
+				return null;
+			}
 			
 			if(message.tags.getBoolean("cancel"))
 			{
@@ -75,23 +79,12 @@ public class PacketExcavation implements IMessage
 			final int x = message.tags.getInteger("x");
 			final int y = message.tags.getInteger("y");
 			final int z = message.tags.getInteger("z");
+
+			final IBlockState state = Block.getStateById(message.tags.getInteger("stateId"));
 			
-			Block block = null;
-			
-			try
+			if(state == null || state.getBlock() == Blocks.AIR)
 			{
-				block = (Block)Block.REGISTRY.getObject(new ResourceLocation(message.tags.getString("block")));
-			} catch(Exception e)
-			{
-				OreExcavation.logger.log(Level.INFO, "Recieved invalid block ID", e);
-			}
-			
-			int meta = message.tags.getInteger("meta");
-			final IBlockState state = block.getStateFromMeta(meta);
-			
-			if(player == null || block == null)
-			{
-				return null;
+				OreExcavation.logger.log(Level.INFO, "Recieved invalid block ID");
 			}
 			
 			final ExcavateShape shape;

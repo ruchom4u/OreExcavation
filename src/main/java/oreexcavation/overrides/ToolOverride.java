@@ -1,9 +1,9 @@
 package oreexcavation.overrides;
 
-import oreexcavation.core.ExcavationSettings;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.oredict.OreDictionary;
+import oreexcavation.core.ExcavationSettings;
 
 public class ToolOverride
 {

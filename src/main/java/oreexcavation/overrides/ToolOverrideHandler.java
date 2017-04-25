@@ -1,9 +1,9 @@
 package oreexcavation.overrides;
 
 import java.util.ArrayList;
+import net.minecraft.item.ItemStack;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.utils.JsonHelper;
-import net.minecraft.item.ItemStack;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

@@ -1,10 +1,10 @@
 package oreexcavation.handlers;
 
 import java.util.Set;
-import oreexcavation.client.GuiOEConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.fml.client.IModGuiFactory;
+import oreexcavation.client.GuiOEConfig;
 
 public class ConfigGuiFactory implements IModGuiFactory
 {
@@ -24,8 +24,9 @@ public class ConfigGuiFactory implements IModGuiFactory
 	{
 		return null;
 	}
-
+	
 	@Override
+	@SuppressWarnings("deprecation")
 	public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element)
 	{
 		return null;

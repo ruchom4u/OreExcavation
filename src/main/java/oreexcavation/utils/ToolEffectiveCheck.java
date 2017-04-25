@@ -1,6 +1,5 @@
 package oreexcavation.utils;
 
-import oreexcavation.core.ExcavationSettings;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemShears;
@@ -9,6 +8,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IShearable;
+import oreexcavation.core.ExcavationSettings;
 
 public class ToolEffectiveCheck
 {
@@ -38,7 +38,7 @@ public class ToolEffectiveCheck
 			
 			for(String type : held.getItem().getToolClasses(held))
 			{
-				if(type.equalsIgnoreCase(state.getBlock().getHarvestTool(state)) && held.getItem().getHarvestLevel(held, type) >= state.getBlock().getHarvestLevel(state))
+				if(type.equalsIgnoreCase(state.getBlock().getHarvestTool(state)) && held.getItem().getHarvestLevel(held, type, player, state) >= state.getBlock().getHarvestLevel(state))
 				{
 					return true;
 				} else if(state.getBlock().isToolEffective(type, state))

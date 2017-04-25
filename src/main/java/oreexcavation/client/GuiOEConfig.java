@@ -1,11 +1,11 @@
 package oreexcavation.client;
 
-import oreexcavation.core.OreExcavation;
-import oreexcavation.handlers.ConfigHandler;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraftforge.common.config.ConfigElement;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.client.config.GuiConfig;
+import oreexcavation.core.OreExcavation;
+import oreexcavation.handlers.ConfigHandler;
 
 public class GuiOEConfig extends GuiConfig
 {
