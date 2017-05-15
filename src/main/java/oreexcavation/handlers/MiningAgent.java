@@ -17,6 +17,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.groups.BlockBlacklist;
+import oreexcavation.groups.BlockEntry;
+import oreexcavation.groups.BlockGroups;
 import oreexcavation.overrides.ToolOverride;
 import oreexcavation.overrides.ToolOverrideHandler;
 import oreexcavation.shapes.ExcavateShape;
@@ -40,6 +43,7 @@ public class MiningAgent
 	private ExcavateShape shape = null;
 	private final ExcavateHistory history;
 	
+	private List<BlockEntry> blockGroup;
 	private IBlockState state;
 	private Block block;
 	private int meta;
@@ -47,6 +51,7 @@ public class MiningAgent
 	private ToolOverride toolProps;
 	
 	private boolean subtypes = true; // Ignore metadata
+	private boolean strictSubs = false; // Disables subtypes and item block equality
 	
 	private List<BigItemStack> drops = new ArrayList<BigItemStack>();
 	private int experience = 0;
@@ -64,6 +69,8 @@ public class MiningAgent
 		this.meta = block.getMetaFromState(state);
 		
 		this.history = new ExcavateHistory(player.world.provider.getDimension());
+		this.blockGroup = BlockGroups.INSTANCE.getGroup(state);
+		this.strictSubs = BlockGroups.INSTANCE.isStrict(state);
 	}
 	
 	public void init()
@@ -81,21 +88,27 @@ public class MiningAgent
 			} catch(Exception e){}
 		}
 		
-		this.subtypes = blockStack == null? true : !blockStack.getHasSubtypes();
+		if(!strictSubs)
+		{
+			this.subtypes = blockStack == null? true : !blockStack.getHasSubtypes();
+		} else
+		{
+			this.subtypes = false;
+		}
 		
 		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
 		origTool = held == null || held.isEmpty()? null : held.getItem();
 		
 		if(held == null)
 		{
-			toolProps = new ToolOverride("", -1);
+			toolProps = ToolOverride.DEFAULT;
 		} else
 		{
 			toolProps = ToolOverrideHandler.INSTANCE.getOverride(held);
 			
 			if(toolProps == null)
 			{
-				toolProps = new ToolOverride("", -1);
+				toolProps = ToolOverride.DEFAULT;
 			}
 		}
 		
@@ -172,9 +185,16 @@ public class MiningAgent
 			Block b = s.getBlock();
 			int m = b.getMetaFromState(s);
 			
-			boolean flag = b == block && (subtypes || m == meta);
+			if(BlockBlacklist.INSTANCE.isBanned(s) || !b.canCollideCheck(s, false))
+			{
+				mined.add(pos);
+				continue;
+			}
 			
-			if(!flag && blockStack != null)
+			boolean flag = b == block && (subtypes || m == meta);
+			flag = flag || BlockGroups.INSTANCE.quickCheck(blockGroup, s);
+			
+			if(!flag && blockStack != null && !strictSubs)
 			{
 				ItemStack stack = null;
 				
