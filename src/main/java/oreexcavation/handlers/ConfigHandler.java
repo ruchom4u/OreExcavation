@@ -1,10 +1,12 @@
 package oreexcavation.handlers;
 
 import java.io.File;
-import java.util.Arrays;
 import net.minecraftforge.common.config.Configuration;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.groups.BlockBlacklist;
+import oreexcavation.groups.BlockGroups;
+import oreexcavation.groups.ItemBlacklist;
 import oreexcavation.overrides.ToolOverrideHandler;
 import oreexcavation.shapes.ShapeRegistry;
 import oreexcavation.utils.JsonHelper;
@@ -47,11 +49,8 @@ public class ConfigHandler
 		String [] tbl = config.getStringList("Tool Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Tools blacklisted from excavating");
 		String [] bbl = config.getStringList("Block Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Blocks blacklisted from being excavated");
 		
-		ExcavationSettings.toolBlacklist.clear();
-		ExcavationSettings.toolBlacklist.addAll(Arrays.asList(tbl));
-		
-		ExcavationSettings.blockBlacklist.clear();
-		ExcavationSettings.blockBlacklist.addAll(Arrays.asList(bbl));
+		BlockBlacklist.INSTANCE.loadList(bbl);
+		ItemBlacklist.INSTANCE.loadList(tbl);
 		
 		config.save();
 		
@@ -68,5 +67,17 @@ public class ConfigHandler
 		}
 		
 		ShapeRegistry.INSTANCE.loadShapes(new File("config/oreexcavation_shapes.json"));
+		
+		File fileGroups = new File("config/oreexcavation_groups.json");
+		
+		if(fileGroups.exists())
+		{
+			BlockGroups.INSTANCE.readFromJson(JsonHelper.ReadFromFile(fileGroups));
+		} else
+		{
+			JsonObject json = BlockGroups.INSTANCE.getDefaultJson();
+			JsonHelper.WriteToFile(fileGroups, json);
+			BlockGroups.INSTANCE.readFromJson(json);
+		}
 	}
 }

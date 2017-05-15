@@ -17,6 +17,11 @@ public class XPHelper
 		}
 	}
 	
+	public static void addXP(EntityPlayer player, long xp)
+	{
+		addXP(player, xp, true);
+	}
+	
 	public static void addXP(EntityPlayer player, long xp, boolean sync)
 	{
 		long experience = getPlayerXP(player) + xp;
@@ -39,17 +44,26 @@ public class XPHelper
 	
 	public static long getPlayerXP(EntityPlayer player)
 	{
-		return getLevelXP(player.experienceLevel) + (long)(xpBarCap(player) * (double)player.experience);
+		return getLevelXP(player.experienceLevel) + (long)Math.round(xpBarCap(player) * (double)player.experience);
 	}
 	
 	public static long xpBarCap(EntityPlayer player)
 	{
-		return player.experienceLevel >= 30L ? 62L + (player.experienceLevel - 30L) * 7L : (player.experienceLevel >= 15L ? 17L + (player.experienceLevel - 15L) * 3L : 17);
+		if(player.experienceLevel < 16)
+		{
+			return 17L;
+		} else if(player.experienceLevel < 31)
+		{
+			return (long)(3D * (player.experienceLevel - 15L) + 17L);
+		} else
+		{
+			return (long)(7D * (player.experienceLevel - 30L) + 62L);
+		}
 	}
 	
 	public static int getXPLevel(long xp)
 	{
-		if(xp < 0)
+		if(xp <= 0)
 		{
 			return 0;
 		}
@@ -76,7 +90,7 @@ public class XPHelper
 	
 	public static long getLevelXP(int level)
 	{
-		if(level < 0)
+		if(level <= 0)
 		{
 			return 0;
 		}

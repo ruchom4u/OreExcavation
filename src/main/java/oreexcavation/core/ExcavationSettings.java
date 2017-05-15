@@ -1,8 +1,5 @@
 package oreexcavation.core;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * A container for all the configurable settings in the mod
  */
@@ -31,7 +28,4 @@ public class ExcavationSettings
 	public static boolean tpsGuard = true;
 	public static boolean autoPickup = false;
 	public static boolean allowShapes = true;
-	
-	public static List<String> toolBlacklist = new ArrayList<String>();
-	public static List<String> blockBlacklist = new ArrayList<String>();
 }

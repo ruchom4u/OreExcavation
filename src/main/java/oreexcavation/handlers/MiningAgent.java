@@ -14,6 +14,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.groups.BlockBlacklist;
+import oreexcavation.groups.BlockEntry;
+import oreexcavation.groups.BlockGroups;
 import oreexcavation.overrides.ToolOverride;
 import oreexcavation.overrides.ToolOverrideHandler;
 import oreexcavation.shapes.ExcavateShape;
@@ -38,12 +41,14 @@ public class MiningAgent
 	private ExcavateShape shape = null;
 	private final ExcavateHistory history;
 	
+	private List<BlockEntry> blockGroup;
 	private Block block;
 	private int meta;
 	
 	private ToolOverride toolProps;
 	
 	private boolean subtypes = true; // Ignore metadata
+	private boolean strictSubs = false; // Disables subtypes and item block equality
 	
 	private List<BigItemStack> drops = new ArrayList<BigItemStack>();
 	private int experience = 0;
@@ -60,6 +65,8 @@ public class MiningAgent
 		this.meta = meta;
 		
 		this.history = new ExcavateHistory(player.worldObj.provider.dimensionId);
+		this.blockGroup = BlockGroups.INSTANCE.getGroup(block, meta);
+		this.strictSubs = BlockGroups.INSTANCE.isStrict(block, meta);
 	}
 	
 	public void init()
@@ -77,21 +84,27 @@ public class MiningAgent
 			} catch(Exception e){}
 		}
 		
-		this.subtypes = blockStack == null? true : !blockStack.getHasSubtypes();
+		if(!strictSubs)
+		{
+			this.subtypes = blockStack == null? true : !blockStack.getHasSubtypes();
+		} else
+		{
+			this.subtypes = false;
+		}
 		
 		ItemStack held = player.getHeldItem();
 		origTool = held == null? null : held.getItem();
 		
 		if(held == null)
 		{
-			toolProps = new ToolOverride("", -1);
+			toolProps = ToolOverride.DEFAULT;
 		} else
 		{
 			toolProps = ToolOverrideHandler.INSTANCE.getOverride(held);
 			
 			if(toolProps == null)
 			{
-				toolProps = new ToolOverride("", -1);
+				toolProps = ToolOverride.DEFAULT;
 			}
 		}
 		
@@ -167,9 +180,16 @@ public class MiningAgent
 			Block b = player.worldObj.getBlock(pos.getX(), pos.getY(), pos.getZ());
 			int m = player.worldObj.getBlockMetadata(pos.getX(), pos.getY(), pos.getZ());
 			
-			boolean flag = b == block && (subtypes || m == meta);
+			if(BlockBlacklist.INSTANCE.isBanned(b, m) || !b.canCollideCheck(m, false))
+			{
+				mined.add(pos);
+				continue;
+			}
 			
-			if(!flag && blockStack != null)
+			boolean flag = b == block && (subtypes || m == meta);
+			flag = flag || BlockGroups.INSTANCE.quickCheck(blockGroup, b, m);
+			
+			if(!flag && blockStack != null && !strictSubs)
 			{
 				ItemStack stack = null;
 				

@@ -28,7 +28,13 @@ public final class ToolOverrideHandler
 			}
 			
 			JsonObject jo = je.getAsJsonObject();
-			ToolOverride to = new ToolOverride(JsonHelper.GetString(jo, "itemID", ""), JsonHelper.GetNumber(jo, "metadata", -1).intValue());
+			ToolOverride to = ToolOverride.readFromString(JsonHelper.GetString(jo, "itemID", ""));
+			
+			if(to == null)
+			{
+				continue;
+			}
+			
 			to.setSpeed(JsonHelper.GetNumber(jo, "speed", ExcavationSettings.mineSpeed).intValue());
 			to.setLimit(JsonHelper.GetNumber(jo, "limit", ExcavationSettings.mineLimit).intValue());
 			to.setRange(JsonHelper.GetNumber(jo, "range", ExcavationSettings.mineRange).intValue());
@@ -57,28 +63,7 @@ public final class ToolOverrideHandler
 		JsonArray jAry = new JsonArray();
 		
 		JsonObject jo = new JsonObject();
-		jo.addProperty("itemID", "minecraft:wooden_pickaxe");
-		jo.addProperty("metadata", -1);
-		jo.addProperty("speed", 1);
-		jo.addProperty("limit", 0);
-		jo.addProperty("range", 0);
-		jo.addProperty("exaustion", 0.1F);
-		jo.addProperty("experience", 0);
-		jAry.add(jo);
-		
-		jo = new JsonObject();
-		jo.addProperty("itemID", "minecraft:wooden_shovel");
-		jo.addProperty("metadata", -1);
-		jo.addProperty("speed", 1);
-		jo.addProperty("limit", 0);
-		jo.addProperty("range", 0);
-		jo.addProperty("exaustion", 0.1F);
-		jo.addProperty("experience", 0);
-		jAry.add(jo);
-		
-		jo = new JsonObject();
-		jo.addProperty("itemID", "minecraft:wooden_axe");
-		jo.addProperty("metadata", -1);
+		jo.addProperty("itemID", "examplemod:nerfed_pickaxe:0");
 		jo.addProperty("speed", 1);
 		jo.addProperty("limit", 0);
 		jo.addProperty("range", 0);

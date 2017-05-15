@@ -1,14 +1,14 @@
 package oreexcavation.overrides;
 
-import oreexcavation.core.ExcavationSettings;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.oredict.OreDictionary;
+import oreexcavation.core.ExcavationSettings;
+import oreexcavation.groups.ItemEntry;
 
 public class ToolOverride
 {
-	private final String itemID;
-	private final int metadata;
+	public static final ToolOverride DEFAULT = ToolOverride.readFromString("*");
+	
+	private ItemEntry itemType;
 	
 	private int speed = 64;
 	private int limit = 128;
@@ -16,10 +16,9 @@ public class ToolOverride
 	private float exaustion = 0.1F;
 	private int experience = 0;
 	
-	public ToolOverride(String itemID, int metadata)
+	private ToolOverride(ItemEntry itemType)
 	{
-		this.itemID = itemID;
-		this.metadata = metadata;
+		this.itemType = itemType;
 		
 		this.speed = ExcavationSettings.mineSpeed;
 		this.limit = ExcavationSettings.mineLimit;
@@ -35,18 +34,7 @@ public class ToolOverride
 			return false;
 		}
 		
-		String id = Item.itemRegistry.getNameForObject(stack.getItem());
-		int m = stack.getItemDamage();
-		
-		if(itemID != null && itemID.length() > 0 && !id.equalsIgnoreCase(itemID))
-		{
-			return false;
-		} else if(!(metadata == OreDictionary.WILDCARD_VALUE) && metadata >= 0 && m != metadata)
-		{
-			return false;
-		}
-		
-		return true;
+		return this.itemType.checkMatch(stack);
 	}
 	
 	public void setSpeed(int value)
@@ -97,5 +85,17 @@ public class ToolOverride
 	public int getExperience()
 	{
 		return experience;
+	}
+	
+	public static ToolOverride readFromString(String s)
+	{
+		ItemEntry entry = ItemEntry.readFromString(s);
+		
+		if(entry == null)
+		{
+			return null;
+		}
+		
+		return new ToolOverride(entry);
 	}
 }
