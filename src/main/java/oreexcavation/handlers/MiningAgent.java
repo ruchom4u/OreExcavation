@@ -206,10 +206,11 @@ public class MiningAgent
 			
 			if(flag)
 			{
-				player.worldObj.captureBlockSnapshots = true;
-				player.worldObj.capturedBlockSnapshots.clear();
-				
-				//BlockHistory blHist = history.recordPosition(player.worldObj, pos);
+				if(ExcavationSettings.maxUndos <= 0)
+				{
+					player.worldObj.captureBlockSnapshots = true;
+					player.worldObj.capturedBlockSnapshots.clear();
+				}
 				
 				if(!(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(player.worldObj, b, m, pos, player)))
 				{
@@ -217,21 +218,24 @@ public class MiningAgent
 					continue;
 				} else if(player.theItemInWorldManager.tryHarvestBlock(pos.getX(), pos.getY(), pos.getZ()))
 				{
-					player.worldObj.captureBlockSnapshots = false;
-					
-					EventHandler.captureAgent = null;
-					while(player.worldObj.capturedBlockSnapshots.size() > 0)
+					if(ExcavationSettings.maxUndos <= 0)
 					{
-						BlockSnapshot snap = player.worldObj.capturedBlockSnapshots.get(0);
-						if(pos.equals(new BlockPos(snap.x, snap.y, snap.z)))
-						{
-							history.addRecordedBlock(new BlockHistory(snap));
-						}
-						player.worldObj.capturedBlockSnapshots.remove(0);
+						player.worldObj.captureBlockSnapshots = false;
 						
-						player.worldObj.markAndNotifyBlock(snap.x, snap.y, snap.z, player.worldObj.getChunkFromChunkCoords(snap.x >> 4, snap.y >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.flag);
+						EventHandler.captureAgent = null;
+						while(player.worldObj.capturedBlockSnapshots.size() > 0)
+						{
+							BlockSnapshot snap = player.worldObj.capturedBlockSnapshots.get(0);
+							if(pos.equals(new BlockPos(snap.x, snap.y, snap.z)))
+							{
+								history.addRecordedBlock(new BlockHistory(snap));
+							}
+							player.worldObj.capturedBlockSnapshots.remove(0);
+							
+							player.worldObj.markAndNotifyBlock(snap.x, snap.y, snap.z, player.worldObj.getChunkFromChunkCoords(snap.x >> 4, snap.y >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.flag);
+						}
+						EventHandler.captureAgent = this;
 					}
-					EventHandler.captureAgent = this;
 					
 					if(!player.capabilities.isCreativeMode)
 					{
