@@ -211,8 +211,11 @@ public class MiningAgent
 			
 			if(flag)
 			{
-				player.worldObj.captureBlockSnapshots = true;
-				player.worldObj.capturedBlockSnapshots.clear();
+				if(ExcavationSettings.maxUndos <= 0)
+				{
+					player.worldObj.captureBlockSnapshots = true;
+					player.worldObj.capturedBlockSnapshots.clear();
+				}
 				
 				if(!(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(player.worldObj, s, pos, player)))
 				{
@@ -220,21 +223,24 @@ public class MiningAgent
 					continue;
 				} else if(player.interactionManager.tryHarvestBlock(pos))
 				{
-					player.worldObj.captureBlockSnapshots = false;
-					
-					EventHandler.captureAgent = null;
-					while(player.worldObj.capturedBlockSnapshots.size() > 0)
+					if(ExcavationSettings.maxUndos <= 0)
 					{
-						BlockSnapshot snap = player.worldObj.capturedBlockSnapshots.get(0);
-						if(pos.equals(snap.getPos()))
-						{
-							history.addRecordedBlock(new BlockHistory(snap));
-						}
-						player.worldObj.capturedBlockSnapshots.remove(0);
+						player.worldObj.captureBlockSnapshots = false;
 						
-						player.worldObj.markAndNotifyBlock(snap.getPos(), player.worldObj.getChunkFromChunkCoords(snap.getPos().getX() >> 4, snap.getPos().getZ() >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.getFlag());
+						EventHandler.captureAgent = null;
+						while(player.worldObj.capturedBlockSnapshots.size() > 0)
+						{
+							BlockSnapshot snap = player.worldObj.capturedBlockSnapshots.get(0);
+							if(pos.equals(snap.getPos()))
+							{
+								history.addRecordedBlock(new BlockHistory(snap));
+							}
+							player.worldObj.capturedBlockSnapshots.remove(0);
+							
+							player.worldObj.markAndNotifyBlock(snap.getPos(), player.worldObj.getChunkFromChunkCoords(snap.getPos().getX() >> 4, snap.getPos().getZ() >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.getFlag());
+						}
+						EventHandler.captureAgent = this;
 					}
-					EventHandler.captureAgent = this;
 					
 					if(!player.isCreative())
 					{

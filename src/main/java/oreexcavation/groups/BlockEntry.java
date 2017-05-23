@@ -2,6 +2,7 @@ package oreexcavation.groups;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -43,7 +44,7 @@ public class BlockEntry
 	
 	public boolean checkMatch(Block block, int metadata)
 	{
-		if(block == null)
+		if(block == null || block == Blocks.AIR)
 		{
 			return false;
 		} else if(idName == null)
