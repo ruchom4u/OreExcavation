@@ -31,7 +31,7 @@ public class ItemEntry
 	
 	public boolean checkMatch(ItemStack stack)
 	{
-		if(stack == null)
+		if(stack == null || stack.isEmpty())
 		{
 			return false;
 		} else if(idName == null)

@@ -211,8 +211,11 @@ public class MiningAgent
 			
 			if(flag)
 			{
-				player.world.captureBlockSnapshots = true;
-				player.world.capturedBlockSnapshots.clear();
+				if(ExcavationSettings.maxUndos > 0)
+				{
+					player.world.captureBlockSnapshots = true;
+					player.world.capturedBlockSnapshots.clear();
+				}
 				
 				if(!(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(player.world, s, pos, player)))
 				{
@@ -220,21 +223,24 @@ public class MiningAgent
 					continue;
 				} else if(player.interactionManager.tryHarvestBlock(pos))
 				{
-					player.world.captureBlockSnapshots = false;
-					
-					EventHandler.captureAgent = null;
-					while(player.world.capturedBlockSnapshots.size() > 0)
+					if(ExcavationSettings.maxUndos > 0)
 					{
-						BlockSnapshot snap = player.world.capturedBlockSnapshots.get(0);
-						if(pos.equals(snap.getPos()))
-						{
-							history.addRecordedBlock(new BlockHistory(snap));
-						}
-						player.world.capturedBlockSnapshots.remove(0);
+						player.world.captureBlockSnapshots = false;
 						
-						player.world.markAndNotifyBlock(snap.getPos(), player.world.getChunkFromChunkCoords(snap.getPos().getX() >> 4, snap.getPos().getZ() >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.getFlag());
+						EventHandler.captureAgent = null;
+						while(player.world.capturedBlockSnapshots.size() > 0)
+						{
+							BlockSnapshot snap = player.world.capturedBlockSnapshots.get(0);
+							if(pos.equals(snap.getPos()))
+							{
+								history.addRecordedBlock(new BlockHistory(snap));
+							}
+							player.world.capturedBlockSnapshots.remove(0);
+							
+							player.world.markAndNotifyBlock(snap.getPos(), player.world.getChunkFromChunkCoords(snap.getPos().getX() >> 4, snap.getPos().getZ() >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.getFlag());
+						}
+						EventHandler.captureAgent = this;
 					}
-					EventHandler.captureAgent = this;
 					
 					if(!player.isCreative())
 					{
@@ -383,7 +389,7 @@ public class MiningAgent
 		{
 			try
 			{
-				m_createStack = Block.class.getDeclaredMethod("createStackedBlock", IBlockState.class);
+				m_createStack = Block.class.getDeclaredMethod("getSilkTouchDrop", IBlockState.class);
 				m_createStack.setAccessible(true);
 			} catch(Exception e2)
 			{
