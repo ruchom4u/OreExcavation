@@ -3,6 +3,7 @@ package oreexcavation.groups;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
@@ -66,7 +67,7 @@ public class BlockEntry
 		
 		Item itemBlock = Item.getItemFromBlock(block);
 		
-		if(itemBlock == null)
+		if(itemBlock == null || itemBlock == Items.AIR)
 		{
 			return false;
 		}
