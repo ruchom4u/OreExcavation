@@ -31,4 +31,16 @@ public class ConfigGuiFactory implements IModGuiFactory
 	{
 		return null;
 	}
+
+	@Override
+	public GuiScreen createConfigGui(GuiScreen arg0)
+	{
+		return new GuiOEConfig(arg0);
+	}
+
+	@Override
+	public boolean hasConfigGui()
+	{
+		return true;
+	}
 }
