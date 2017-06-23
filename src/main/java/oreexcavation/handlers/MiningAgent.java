@@ -17,6 +17,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.events.IExcavateFilter;
 import oreexcavation.groups.BlockBlacklist;
 import oreexcavation.groups.BlockEntry;
 import oreexcavation.groups.BlockGroups;
@@ -35,20 +36,21 @@ public class MiningAgent
 {
 	private ItemStack blockStack = null;
 	private Item origTool = null;
-	private List<BlockPos> mined = new ArrayList<BlockPos>();
-	private List<BlockPos> scheduled = new ArrayList<BlockPos>();
-	private final EntityPlayerMP player;
-	private final BlockPos origin;
+	private final List<BlockPos> mined = new ArrayList<BlockPos>();
+	private final List<BlockPos> scheduled = new ArrayList<BlockPos>();
+	public final EntityPlayerMP player;
+	public final BlockPos origin;
 	private EnumFacing facing = EnumFacing.SOUTH;
 	private ExcavateShape shape = null;
 	private final ExcavateHistory history;
 	
-	private List<BlockEntry> blockGroup;
-	private IBlockState state;
-	private Block block;
-	private int meta;
+	public final List<BlockEntry> blockGroup = new ArrayList<BlockEntry>();
+	private final List<IExcavateFilter> filters = new ArrayList<IExcavateFilter>();
+	public final IBlockState state;
+	private final Block block;
+	private final int meta;
 	
-	private ToolOverride toolProps;
+	public ToolOverride toolProps = ToolOverride.DEFAULT;
 	
 	private boolean subtypes = true; // Ignore metadata
 	private boolean strictSubs = false; // Disables subtypes and item block equality
@@ -69,8 +71,27 @@ public class MiningAgent
 		this.meta = block.getMetaFromState(state);
 		
 		this.history = new ExcavateHistory(player.worldObj.provider.getDimension());
-		this.blockGroup = BlockGroups.INSTANCE.getGroup(state);
+		this.blockGroup.addAll(BlockGroups.INSTANCE.getGroup(state));
 		this.strictSubs = BlockGroups.INSTANCE.isStrict(state);
+		
+		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
+		origTool = held == null? null : held.getItem();
+		
+		if(held != null)
+		{
+			ToolOverride to = ToolOverrideHandler.INSTANCE.getOverride(held);
+			toolProps = to != null? to : toolProps;
+		}
+	}
+	
+	public void setOverride(ToolOverride override)
+	{
+		this.toolProps = override;
+	}
+	
+	public void addFilter(IExcavateFilter filter)
+	{
+		this.filters.add(filter);
 	}
 	
 	public void init()
@@ -94,22 +115,6 @@ public class MiningAgent
 		} else
 		{
 			this.subtypes = false;
-		}
-		
-		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
-		origTool = held == null? null : held.getItem();
-		
-		if(held == null)
-		{
-			toolProps = ToolOverride.DEFAULT;
-		} else
-		{
-			toolProps = ToolOverrideHandler.INSTANCE.getOverride(held);
-			
-			if(toolProps == null)
-			{
-				toolProps = ToolOverride.DEFAULT;
-			}
 		}
 		
 		for(int i = -1; i <= 1; i++)
@@ -295,6 +300,14 @@ public class MiningAgent
 		} else if(shape != null && !shape.isValid(origin, pos, facing))
 		{
 			return;
+		}
+		
+		for(IExcavateFilter filter : this.filters)
+		{
+			if(!filter.canHarvest(player, this, pos))
+			{
+				return;
+			}
 		}
 		
 		scheduled.add(pos);
