@@ -63,17 +63,17 @@ public class MiningScheduler
 		{
 			existing = new MiningAgent(player, pos, state);
 			
-			if(!MinecraftForge.EVENT_BUS.post(new EventExcavate.Pre(existing)))
+			if(shape != null)
+			{
+				existing.setShape(shape, ExcavateShape.getFacing(player));
+			}
+			
+			if(MinecraftForge.EVENT_BUS.post(new EventExcavate.Pre(existing)))
 			{
 				return null;
 			}
 			
 			agents.put(player.getUniqueID(), existing);
-			
-			if(shape != null)
-			{
-				existing.setShape(shape, ExcavateShape.getFacing(player));
-			}
 			
 			existing.init();
 		}

@@ -40,8 +40,8 @@ public class MiningAgent
 	private final List<BlockPos> scheduled = new ArrayList<BlockPos>();
 	public final EntityPlayerMP player;
 	public final BlockPos origin;
-	private EnumFacing facing = EnumFacing.SOUTH;
-	private ExcavateShape shape = null;
+	public EnumFacing facing = EnumFacing.SOUTH;
+	public ExcavateShape shape = null;
 	private final ExcavateHistory history;
 	
 	public final List<BlockEntry> blockGroup = new ArrayList<BlockEntry>();
