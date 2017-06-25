@@ -4,6 +4,8 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.apache.logging.log4j.Level;
+import com.google.common.base.Stopwatch;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
@@ -14,6 +16,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.events.IExcavateFilter;
 import oreexcavation.groups.BlockBlacklist;
 import oreexcavation.groups.BlockEntry;
 import oreexcavation.groups.BlockGroups;
@@ -26,8 +29,6 @@ import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.BlockPos;
 import oreexcavation.utils.ToolEffectiveCheck;
 import oreexcavation.utils.XPHelper;
-import org.apache.logging.log4j.Level;
-import com.google.common.base.Stopwatch;
 
 public class MiningAgent
 {
@@ -35,17 +36,18 @@ public class MiningAgent
 	private Item origTool = null; // Original tool the player was holding (must be the same to continue)
 	private final List<BlockPos> mined = new ArrayList<BlockPos>();
 	private final List<BlockPos> scheduled = new ArrayList<BlockPos>();
-	private final EntityPlayerMP player;
-	private final BlockPos origin;
-	private EnumFacing facing = EnumFacing.SOUTH;
-	private ExcavateShape shape = null;
+	public final EntityPlayerMP player;
+	public final BlockPos origin;
+	public EnumFacing facing = EnumFacing.SOUTH;
+	public ExcavateShape shape = null;
 	private final ExcavateHistory history;
 	
-	private List<BlockEntry> blockGroup;
-	private Block block;
-	private int meta;
+	public final List<BlockEntry> blockGroup = new ArrayList<BlockEntry>();
+	private final List<IExcavateFilter> filters = new ArrayList<IExcavateFilter>();
+	public final Block block;
+	public final int meta;
 	
-	private ToolOverride toolProps;
+	public ToolOverride toolProps = ToolOverride.DEFAULT;
 	
 	private boolean subtypes = true; // Ignore metadata
 	private boolean strictSubs = false; // Disables subtypes and item block equality
@@ -65,8 +67,27 @@ public class MiningAgent
 		this.meta = meta;
 		
 		this.history = new ExcavateHistory(player.worldObj.provider.dimensionId);
-		this.blockGroup = BlockGroups.INSTANCE.getGroup(block, meta);
+		this.blockGroup.addAll(BlockGroups.INSTANCE.getGroup(block, meta));
 		this.strictSubs = BlockGroups.INSTANCE.isStrict(block, meta);
+		
+		ItemStack held = player.getHeldItem();
+		origTool = held == null? null : held.getItem();
+		
+		if(held != null)
+		{
+			ToolOverride to = ToolOverrideHandler.INSTANCE.getOverride(held);
+			toolProps = to != null? to : toolProps;
+		}
+	}
+	
+	public void setOverride(ToolOverride override)
+	{
+		this.toolProps = override;
+	}
+	
+	public void addFilter(IExcavateFilter filter)
+	{
+		this.filters.add(filter);
 	}
 	
 	public void init()
@@ -90,22 +111,6 @@ public class MiningAgent
 		} else
 		{
 			this.subtypes = false;
-		}
-		
-		ItemStack held = player.getHeldItem();
-		origTool = held == null? null : held.getItem();
-		
-		if(held == null)
-		{
-			toolProps = ToolOverride.DEFAULT;
-		} else
-		{
-			toolProps = ToolOverrideHandler.INSTANCE.getOverride(held);
-			
-			if(toolProps == null)
-			{
-				toolProps = ToolOverride.DEFAULT;
-			}
 		}
 		
 		for(int i = -1; i <= 1; i++)
@@ -206,7 +211,7 @@ public class MiningAgent
 			
 			if(flag)
 			{
-				if(ExcavationSettings.maxUndos <= 0)
+				if(ExcavationSettings.maxUndos > 0)
 				{
 					player.worldObj.captureBlockSnapshots = true;
 					player.worldObj.capturedBlockSnapshots.clear();
@@ -218,7 +223,7 @@ public class MiningAgent
 					continue;
 				} else if(player.theItemInWorldManager.tryHarvestBlock(pos.getX(), pos.getY(), pos.getZ()))
 				{
-					if(ExcavationSettings.maxUndos <= 0)
+					if(ExcavationSettings.maxUndos > 0)
 					{
 						player.worldObj.captureBlockSnapshots = false;
 						
@@ -290,6 +295,14 @@ public class MiningAgent
 		} else if(shape != null && !shape.isValid(origin, pos, facing))
 		{
 			return;
+		}
+		
+		for(IExcavateFilter filter : this.filters)
+		{
+			if(!filter.canHarvest(player, this, pos))
+			{
+				return;
+			}
 		}
 		
 		scheduled.add(pos);
