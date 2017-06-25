@@ -12,7 +12,9 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.MinecraftForge;
 import oreexcavation.core.ExcavationSettings;
+import oreexcavation.events.EventExcavate;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.undo.ExcavateHistory;
 import oreexcavation.undo.RestoreResult;
@@ -42,6 +44,8 @@ public class MiningScheduler
 	{
 		MiningAgent a = agents.get(player.getUniqueID());
 		
+		MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
+		
 		if(a != null)
 		{
 			a.dropEverything();
@@ -60,12 +64,18 @@ public class MiningScheduler
 		} else
 		{
 			existing = new MiningAgent(player, pos, state);
-			agents.put(player.getUniqueID(), existing);
 			
 			if(shape != null)
 			{
 				existing.setShape(shape, ExcavateShape.getFacing(player));
 			}
+			
+			if(MinecraftForge.EVENT_BUS.post(new EventExcavate.Pre(existing)))
+			{
+				return null;
+			}
+			
+			agents.put(player.getUniqueID(), existing);
 			
 			existing.init();
 		}
@@ -135,6 +145,8 @@ public class MiningScheduler
 			
 			if(complete)
 			{
+				MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
+				
 				a.dropEverything();
 				appendHistory(entry.getKey(), a.getHistory());
 				iterAgents.remove();
