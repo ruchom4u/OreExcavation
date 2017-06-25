@@ -108,10 +108,10 @@ public class EventHandler
 		}
 	}
 	
-	@SubscribeEvent
+	@SubscribeEvent(priority=EventPriority.LOWEST)
 	public void onBlockBreak(BlockEvent.BreakEvent event)
 	{
-		if(event.getWorld().isRemote)
+		if(event.getWorld().isRemote || event.isCanceled())
 		{
 			return;
 		}
