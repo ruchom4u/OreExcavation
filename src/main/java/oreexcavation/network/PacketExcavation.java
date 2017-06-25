@@ -55,7 +55,7 @@ public class PacketExcavation implements IMessage
 		@Override
 		public PacketExcavation onMessage(PacketExcavation message, MessageContext ctx)
 		{
-			final EntityPlayerMP player = ctx.getServerHandler().playerEntity;
+			final EntityPlayerMP player = ctx.getServerHandler().player;
 			
 			if(player == null)
 			{

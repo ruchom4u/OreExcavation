@@ -92,7 +92,7 @@ public class EventHandler
 			if(event.getEntity() instanceof EntityItem)
 			{
 				EntityItem eItem = (EntityItem)event.getEntity();
-				ItemStack stack = eItem.getEntityItem();
+				ItemStack stack = eItem.getItem();
 				
 				captureAgent.addItemDrop(stack);
 				

@@ -225,13 +225,13 @@ public class ExcavateShape
 		Vec3d dir = player.getLookVec();
 		dir = dir.normalize();
 		
-		double ax = Math.abs(dir.xCoord);
-		double ay = Math.abs(dir.yCoord);
-		double az = Math.abs(dir.zCoord);
+		double ax = Math.abs(dir.x);
+		double ay = Math.abs(dir.y);
+		double az = Math.abs(dir.z);
 		
 		if(ax > ay && ax > az)
 		{
-			if(dir.xCoord > 0)
+			if(dir.x > 0)
 			{
 				return EnumFacing.WEST;
 			} else
@@ -240,7 +240,7 @@ public class ExcavateShape
 			}
 		} else if(az > ay && az > ax)
 		{
-			if(dir.zCoord > 0)
+			if(dir.z > 0)
 			{
 				return EnumFacing.SOUTH;
 			} else
@@ -249,7 +249,7 @@ public class ExcavateShape
 			}
 		} else if(ay > ax && ay > az)
 		{
-			if(dir.yCoord > 0)
+			if(dir.y > 0)
 			{
 				return EnumFacing.UP;
 			} else

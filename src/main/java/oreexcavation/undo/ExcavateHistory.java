@@ -78,7 +78,7 @@ public class ExcavateHistory
 	
 	public RestoreResult canRestore(MinecraftServer server, EntityPlayer player)
 	{
-		World world = server.worldServerForDimension(dimension);
+		World world = server.getWorld(dimension);
 		
 		if(!player.capabilities.isCreativeMode)
 		{
@@ -161,7 +161,7 @@ public class ExcavateHistory
 		}
 		
 		Iterator<BlockHistory> iterator = history.iterator();
-		World world = server.worldServerForDimension(dimension);
+		World world = server.getWorld(dimension);
 		
 		while(iterator.hasNext())
 		{

@@ -20,8 +20,8 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12-14.21.0.2330"
-    mappings = "snapshot_20161220"
+    version = "1.12-14.21.0.2363"
+    mappings = "snapshot_20170624"
 }
 
 dependencies {

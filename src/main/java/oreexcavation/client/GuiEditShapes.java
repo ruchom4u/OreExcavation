@@ -58,8 +58,8 @@ public class GuiEditShapes extends GuiScreen
 		btnRemove = new GuiButton(3, guiLeft + 86, guiTop + 222, 20, 20, "-");
 		btnRemove.packedFGColour = Color.RED.getRGB();
 		
-		txtField = new GuiTextField(0, mc.fontRendererObj, guiLeft + 48, guiTop + 16, 112, 16);
-		nmbField = new GuiNumberField(mc.fontRendererObj, guiLeft + 176, guiTop + 16, 32, 16);
+		txtField = new GuiTextField(0, mc.fontRenderer, guiLeft + 48, guiTop + 16, 112, 16);
+		nmbField = new GuiNumberField(mc.fontRenderer, guiLeft + 176, guiTop + 16, 32, 16);
 		
 		this.buttonList.add(btnLeft);
 		this.buttonList.add(btnRight);
