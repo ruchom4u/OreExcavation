@@ -55,7 +55,7 @@ public class MiningAgent
 	private boolean subtypes = true; // Ignore metadata
 	private boolean strictSubs = false; // Disables subtypes and item block equality
 	
-	private List<BigItemStack> drops = new ArrayList<BigItemStack>();
+	private final List<BigItemStack> drops = new ArrayList<BigItemStack>();
 	private int experience = 0;
 	
 	private Stopwatch timer;
@@ -216,7 +216,7 @@ public class MiningAgent
 			
 			if(flag)
 			{
-				if(ExcavationSettings.maxUndos <= 0)
+				if(ExcavationSettings.maxUndos > 0)
 				{
 					player.worldObj.captureBlockSnapshots = true;
 					player.worldObj.capturedBlockSnapshots.clear();
@@ -228,7 +228,7 @@ public class MiningAgent
 					continue;
 				} else if(player.interactionManager.tryHarvestBlock(pos))
 				{
-					if(ExcavationSettings.maxUndos <= 0)
+					if(ExcavationSettings.maxUndos > 0)
 					{
 						player.worldObj.captureBlockSnapshots = false;
 						

@@ -44,6 +44,8 @@ public class MiningScheduler
 	{
 		MiningAgent a = agents.get(player.getUniqueID());
 		
+		MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
+		
 		if(a != null)
 		{
 			a.dropEverything();
@@ -143,11 +145,11 @@ public class MiningScheduler
 			
 			if(complete)
 			{
+				MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
+				
 				a.dropEverything();
 				appendHistory(entry.getKey(), a.getHistory());
 				iterAgents.remove();
-				
-				MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
 			}
 		}
 		
