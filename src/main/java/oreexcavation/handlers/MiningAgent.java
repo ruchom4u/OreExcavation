@@ -18,7 +18,6 @@ import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.events.IExcavateFilter;
-import oreexcavation.groups.BlockBlacklist;
 import oreexcavation.groups.BlockEntry;
 import oreexcavation.groups.BlockGroups;
 import oreexcavation.overrides.ToolOverride;
@@ -190,7 +189,7 @@ public class MiningAgent
 			Block b = s.getBlock();
 			int m = b.getMetaFromState(s);
 			
-			if(BlockBlacklist.INSTANCE.isBanned(s) || !b.canCollideCheck(s, false))
+			if(EventHandler.isBlockBlacklisted(s) || !b.canCollideCheck(s, false))
 			{
 				mined.add(pos);
 				continue;

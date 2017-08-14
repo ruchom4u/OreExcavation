@@ -131,10 +131,10 @@ public class EventHandler
 		if(player.getHeldItem(EnumHand.MAIN_HAND) == null && !ExcavationSettings.openHand)
 		{
 			return;
-		} else if(isToolBlacklisted(player.getHeldItem(EnumHand.MAIN_HAND)) != ExcavationSettings.invertTBlacklist)
+		} else if(isToolBlacklisted(player.getHeldItem(EnumHand.MAIN_HAND)))
 		{
 			return;
-		} else if(isBlockBlacklisted(event.getState()) != ExcavationSettings.invertBBlacklist)
+		} else if(isBlockBlacklisted(event.getState()))
 		{
 			return;
 		} else if(event.getState().getBlock().isAir(event.getState(), event.getWorld(), event.getPos()))
@@ -230,23 +230,23 @@ public class EventHandler
 		captureAgent = null;
 	}
 	
-	public boolean isBlockBlacklisted(IBlockState state)
+	public static boolean isBlockBlacklisted(IBlockState state)
 	{
 		if(state == null || state.getBlock() == null || state.getBlock() == Blocks.AIR)
 		{
 			return false;
 		}
 		
-		return BlockBlacklist.INSTANCE.isBanned(state);
+		return BlockBlacklist.INSTANCE.isBanned(state) != ExcavationSettings.invertBBlacklist;
 	}
 	
-	public boolean isToolBlacklisted(ItemStack stack)
+	public static boolean isToolBlacklisted(ItemStack stack)
 	{
 		if(stack == null || stack.getItem() == null)
 		{
 			return false;
 		}
 		
-		return ItemBlacklist.INSTANCE.isBanned(stack);
+		return ItemBlacklist.INSTANCE.isBanned(stack) != ExcavationSettings.invertTBlacklist;
 	}
 }
