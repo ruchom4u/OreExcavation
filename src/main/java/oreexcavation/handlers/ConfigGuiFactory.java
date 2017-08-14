@@ -12,13 +12,7 @@ public class ConfigGuiFactory implements IModGuiFactory
 	public void initialize(Minecraft minecraftInstance)
 	{
 	}
-
-	@Override
-	public Class<? extends GuiScreen> mainConfigGuiClass()
-	{
-		return GuiOEConfig.class;
-	}
-
+	
 	@Override
 	public Set<RuntimeOptionCategoryElement> runtimeGuiCategories()
 	{
@@ -26,18 +20,11 @@ public class ConfigGuiFactory implements IModGuiFactory
 	}
 	
 	@Override
-	@SuppressWarnings("deprecation")
-	public RuntimeOptionGuiHandler getHandlerFor(RuntimeOptionCategoryElement element)
-	{
-		return null;
-	}
-
-	@Override
 	public GuiScreen createConfigGui(GuiScreen arg0)
 	{
 		return new GuiOEConfig(arg0);
 	}
-
+	
 	@Override
 	public boolean hasConfigGui()
 	{

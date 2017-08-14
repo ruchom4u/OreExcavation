@@ -14,13 +14,11 @@ version = "CI_MOD_VERSION"
 group= "oreexcavation" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "OreExcavation"
 
-sourceCompatibility = targetCompatibility = '1.8'
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 minecraft {
-    version = "1.12-14.21.0.2363"
+    version = "1.12.1-14.22.0.2453"
     mappings = "snapshot_20170624"
 }
 
