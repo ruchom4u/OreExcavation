@@ -129,10 +129,10 @@ public class EventHandler
 		if(player.getHeldItem() == null && !ExcavationSettings.openHand)
 		{
 			return;
-		} else if(isToolBlacklisted(player.getHeldItem()) != ExcavationSettings.invertTBlacklist)
+		} else if(isToolBlacklisted(player.getHeldItem()))
 		{
 			return;
-		} else if(isBlockBlacklisted(event.block, event.blockMetadata) != ExcavationSettings.invertBBlacklist)
+		} else if(isBlockBlacklisted(event.block, event.blockMetadata))
 		{
 			return;
 		} else if(event.block.isAir(event.world, event.x, event.y, event.z))
@@ -226,23 +226,23 @@ public class EventHandler
 		captureAgent = null;
 	}
 	
-	public boolean isBlockBlacklisted(Block block, int metadata)
+	public static boolean isBlockBlacklisted(Block block, int metadata)
 	{
 		if(block == null || block == Blocks.air)
 		{
 			return false;
 		}
 		
-		return BlockBlacklist.INSTANCE.isBanned(block, metadata);
+		return BlockBlacklist.INSTANCE.isBanned(block, metadata) != ExcavationSettings.invertBBlacklist;
 	}
 	
-	public boolean isToolBlacklisted(ItemStack stack)
+	public static boolean isToolBlacklisted(ItemStack stack)
 	{
 		if(stack == null || stack.getItem() == null)
 		{
 			return false;
 		}
 		
-		return ItemBlacklist.INSTANCE.isBanned(stack);
+		return ItemBlacklist.INSTANCE.isBanned(stack) != ExcavationSettings.invertTBlacklist;
 	}
 }

@@ -4,8 +4,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.apache.logging.log4j.Level;
-import com.google.common.base.Stopwatch;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
@@ -17,7 +15,6 @@ import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.events.IExcavateFilter;
-import oreexcavation.groups.BlockBlacklist;
 import oreexcavation.groups.BlockEntry;
 import oreexcavation.groups.BlockGroups;
 import oreexcavation.overrides.ToolOverride;
@@ -29,6 +26,8 @@ import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.BlockPos;
 import oreexcavation.utils.ToolEffectiveCheck;
 import oreexcavation.utils.XPHelper;
+import org.apache.logging.log4j.Level;
+import com.google.common.base.Stopwatch;
 
 public class MiningAgent
 {
@@ -185,7 +184,7 @@ public class MiningAgent
 			Block b = player.worldObj.getBlock(pos.getX(), pos.getY(), pos.getZ());
 			int m = player.worldObj.getBlockMetadata(pos.getX(), pos.getY(), pos.getZ());
 			
-			if(BlockBlacklist.INSTANCE.isBanned(b, m) || !b.canCollideCheck(m, false))
+			if(EventHandler.isBlockBlacklisted(b, m) || !b.canCollideCheck(m, false))
 			{
 				mined.add(pos);
 				continue;
