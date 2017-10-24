@@ -6,8 +6,6 @@ import oreexcavation.groups.ItemEntry;
 
 public class ToolOverride
 {
-	public static final ToolOverride DEFAULT = ToolOverride.readFromString("*");
-	
 	private ItemEntry itemType;
 	
 	private int speed = 64;
@@ -16,7 +14,7 @@ public class ToolOverride
 	private float exaustion = 0.1F;
 	private int experience = 0;
 	
-	private ToolOverride(ItemEntry itemType)
+	public ToolOverride(ItemEntry itemType)
 	{
 		this.itemType = itemType;
 		
