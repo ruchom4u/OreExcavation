@@ -1,5 +1,6 @@
 package oreexcavation.handlers;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -24,8 +25,8 @@ public class MiningScheduler
 {
 	public static final MiningScheduler INSTANCE = new MiningScheduler();
 	
-	private HashMap<UUID,MiningAgent> agents = new HashMap<UUID,MiningAgent>();
-	private HashMap<String,ExcavateHistory> undoing = new HashMap<String,ExcavateHistory>(); // TODO: Change to UUID in 1.10 & 1.11
+	private ArrayDeque<MiningAgent> agents = new ArrayDeque<MiningAgent>();
+	private HashMap<String,ExcavateHistory> undoing = new HashMap<String,ExcavateHistory>();
 	private HashMap<UUID,List<ExcavateHistory>> undoHistory = new HashMap<UUID,List<ExcavateHistory>>();
 	
 	private Stopwatch timer;
@@ -37,26 +38,32 @@ public class MiningScheduler
 	
 	public MiningAgent getActiveAgent(UUID uuid)
 	{
-		return agents.get(uuid);
+		for(MiningAgent a : agents)
+		{
+			if(a.getPlayerID().equals(uuid))
+			{
+				return a;
+			}
+		}
+		
+		return null;
 	}
 	
 	public void stopMining(EntityPlayerMP player)
 	{
-		MiningAgent a = agents.get(player.getUniqueID());
-		
-		MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
+		MiningAgent a = getActiveAgent(player.getUniqueID());
 		
 		if(a != null)
 		{
+			MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
 			a.dropEverything();
+			agents.remove(a);
 		}
-		
-		agents.remove(player.getUniqueID());
 	}
 	
 	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, Block block, int meta, ExcavateShape shape)
 	{
-		MiningAgent existing = agents.get(player.getUniqueID());
+		MiningAgent existing = getActiveAgent(player.getUniqueID());//agents.get(player.getUniqueID());
 		
 		if(existing != null)
 		{
@@ -75,7 +82,7 @@ public class MiningScheduler
 				return null;
 			}
 			
-			agents.put(player.getUniqueID(), existing);
+			agents.add(existing);
 			
 			existing.init();
 		}
@@ -125,9 +132,9 @@ public class MiningScheduler
 		timer.reset();
 		timer.start();
 		
-		Iterator<Entry<UUID,MiningAgent>> iterAgents = agents.entrySet().iterator();
+		int n = agents.size();
 		
-		while(iterAgents.hasNext())
+		for(int i = 0; i < n && !agents.isEmpty(); i++)
 		{
 			if(ExcavationSettings.tpsGuard && timer.elapsed(TimeUnit.MILLISECONDS) > 40)
 			{
@@ -135,12 +142,10 @@ public class MiningScheduler
 				break;
 			}
 			
-			Entry<UUID,MiningAgent> entry = iterAgents.next();
-			
-			MiningAgent a = entry.getValue();
+			MiningAgent a = agents.poll();
 			
 			EventHandler.captureAgent = a;
-			boolean complete = a.tickMiner();
+			boolean complete = a.tickMiner(timer);
 			EventHandler.captureAgent = null;
 			
 			if(complete)
@@ -148,8 +153,10 @@ public class MiningScheduler
 				MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
 				
 				a.dropEverything();
-				appendHistory(entry.getKey(), a.getHistory());
-				iterAgents.remove();
+				appendHistory(a.getPlayerID(), a.getHistory());
+			} else
+			{
+				agents.add(a);
 			}
 		}
 		
