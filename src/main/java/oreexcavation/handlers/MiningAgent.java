@@ -1,8 +1,10 @@
 package oreexcavation.handlers;
 
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -21,6 +23,7 @@ import oreexcavation.events.IExcavateFilter;
 import oreexcavation.groups.BlockEntry;
 import oreexcavation.groups.BlockGroups;
 import oreexcavation.overrides.ToolOverride;
+import oreexcavation.overrides.ToolOverrideDefault;
 import oreexcavation.overrides.ToolOverrideHandler;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.undo.BlockHistory;
@@ -36,9 +39,10 @@ public class MiningAgent
 	private ItemStack blockStack = null;
 	private Item origTool = null;
 	private final List<BlockPos> mined = new ArrayList<BlockPos>();
-	private final List<BlockPos> scheduled = new ArrayList<BlockPos>();
+	private final ArrayDeque<BlockPos> scheduled = new ArrayDeque<BlockPos>();
 	public final EntityPlayerMP player;
 	public final BlockPos origin;
+	public final UUID playerID;
 	public EnumFacing facing = EnumFacing.SOUTH;
 	public ExcavateShape shape = null;
 	private final ExcavateHistory history;
@@ -49,7 +53,7 @@ public class MiningAgent
 	private final Block block;
 	private final int meta;
 	
-	public ToolOverride toolProps = ToolOverride.DEFAULT;
+	public ToolOverride toolProps = ToolOverrideDefault.DEFAULT;
 	
 	private boolean subtypes = true; // Ignore metadata
 	private boolean strictSubs = false; // Disables subtypes and item block equality
@@ -57,13 +61,11 @@ public class MiningAgent
 	private final List<BigItemStack> drops = new ArrayList<BigItemStack>();
 	private int experience = 0;
 	
-	private Stopwatch timer;
-	
 	public MiningAgent(EntityPlayerMP player, BlockPos origin, IBlockState state)
 	{
-		this.timer = Stopwatch.createUnstarted();
 		this.player = player;
 		this.origin = origin;
+		this.playerID = player.getUniqueID();
 		
 		this.state = state;
 		this.block = state.getBlock();
@@ -81,6 +83,11 @@ public class MiningAgent
 			ToolOverride to = ToolOverrideHandler.INSTANCE.getOverride(held);
 			toolProps = to != null? to : toolProps;
 		}
+	}
+	
+	public UUID getPlayerID()
+	{
+		return this.playerID;
 	}
 	
 	public void setOverride(ToolOverride override)
@@ -138,17 +145,14 @@ public class MiningAgent
 	/**
 	 * Returns true if the miner is no longer valid or has completed
 	 */
-	public boolean tickMiner()
+	public boolean tickMiner(Stopwatch timer)
 	{
 		if(origin == null || player == null || !player.isEntityAlive() || mined.size() >= toolProps.getLimit())
 		{
 			return true;
 		}
 		
-		timer.reset();
-		timer.start();
-		
-		for(int n = 0; scheduled.size() > 0; n++)
+		for(int n = 0; !scheduled.isEmpty(); n++)
 		{
 			if(n >= toolProps.getSpeed() || mined.size() >= toolProps.getLimit())
 			{
@@ -166,15 +170,13 @@ public class MiningAgent
 			if(heldItem != origTool)
 			{
 				// Original tool has been swapped or broken
-				timer.stop();
 				return true;
 			} else if(!hasEnergy(player))
 			{
-				timer.stop();
 				return true;
 			}
 			
-			BlockPos pos = scheduled.remove(0);
+			BlockPos pos = scheduled.poll();
 			
 			if(pos == null)
 			{
@@ -274,8 +276,6 @@ public class MiningAgent
 				mined.add(pos);
 			}
 		}
-		
-		timer.stop();
 		
 		if(!player.isCreative())
 		{
