@@ -156,6 +156,8 @@ public class EventHandler
 				tag.setInteger("y", p.getY());
 				tag.setInteger("z", p.getZ());
 				tag.setInteger("stateId", Block.getStateId(s));
+				tag.setInteger("side", ExcavateShape.getFacing(player, s, p).getIndex());
+				
 				OreExcavation.instance.network.sendTo(new PacketExcavation(tag), player);
 			}
 		}
