@@ -12,6 +12,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import oreexcavation.core.ExcavationSettings;
@@ -61,7 +62,18 @@ public class MiningScheduler
 		}
 	}
 	
+	@Deprecated
 	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state, ExcavateShape shape)
+	{
+		return startMining(player, pos, state, shape, ExcavateShape.getFacing(player));
+	}
+	
+	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state)
+	{
+		return startMining(player, pos, state, null, EnumFacing.NORTH);
+	}
+	
+	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state, ExcavateShape shape, EnumFacing dir)
 	{
 		MiningAgent existing = getActiveAgent(player.getUniqueID());
 		
@@ -74,7 +86,7 @@ public class MiningScheduler
 			
 			if(shape != null)
 			{
-				existing.setShape(shape, ExcavateShape.getFacing(player));
+				existing.setShape(shape, dir);
 			}
 			
 			if(MinecraftForge.EVENT_BUS.post(new EventExcavate.Pre(existing)))
