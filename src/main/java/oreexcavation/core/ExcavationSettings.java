@@ -18,6 +18,7 @@ public class ExcavationSettings
 	 */
 	public static int mineMode = 1;
 	public static boolean mustHold = true;
+	public static boolean useSideHit = true;
 	public static boolean invertTBlacklist = false;
 	public static boolean invertBBlacklist = false;
 	
