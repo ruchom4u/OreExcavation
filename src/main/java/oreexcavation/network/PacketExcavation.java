@@ -8,6 +8,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.util.EnumFacing;
 import oreexcavation.client.ExcavationKeys;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.handlers.EventHandler;
@@ -78,6 +79,7 @@ public class PacketExcavation implements IMessage
 			}
 			
 			final ExcavateShape shape;
+			final EnumFacing facing;
 			
 			if(message.tags.hasKey("shape"))
 			{
@@ -100,12 +102,15 @@ public class PacketExcavation implements IMessage
 					int origin = message.tags.getInteger("origin");
 					shape.setReticle(origin%5, origin/5);
 				}
+				
+				facing = EnumFacing.values()[message.tags.getInteger("side")];
 			} else
 			{
 				shape = null;
+				facing = EnumFacing.NORTH;
 			}
 			
-			MiningScheduler.INSTANCE.startMining(player, new BlockPos(x, y, z), block, meta, shape);
+			MiningScheduler.INSTANCE.startMining(player, new BlockPos(x, y, z), block, meta, shape, facing);
 			
 			return null;
 		}
@@ -140,6 +145,11 @@ public class PacketExcavation implements IMessage
 				message.tags.setInteger("shape", shape.getShapeMask());
 				message.tags.setInteger("depth", shape.getMaxDepth());
 				message.tags.setInteger("origin", shape.getReticle());
+				
+				if(!ExcavationSettings.useSideHit)
+				{
+					message.tags.setInteger("side", ExcavateShape.getFacing(Minecraft.getMinecraft().thePlayer).ordinal());
+				}
 			}
 			
 			return new PacketExcavation(message.tags);

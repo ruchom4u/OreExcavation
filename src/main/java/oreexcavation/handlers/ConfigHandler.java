@@ -35,6 +35,7 @@ public class ConfigHandler
 		ExcavationSettings.experience = config.getInt("Experience", Configuration.CATEGORY_GENERAL, 0, 0, Integer.MAX_VALUE, "Experience cost per block excavated");
 		ExcavationSettings.openHand = config.getBoolean("Open Hand", Configuration.CATEGORY_GENERAL, true, "Allow excavation with an open hand");
 		ExcavationSettings.mustHold = config.getBoolean("Must Hold", Configuration.CATEGORY_GENERAL, true, "Allows players to cancel excavation by releasing the keys");
+		ExcavationSettings.useSideHit = config.getBoolean("Use Side Hit", Configuration.CATEGORY_GENERAL, true, "Use the side of the block hit to determine shape mining direction");
 		ExcavationSettings.invertTBlacklist = config.getBoolean("Invert Tool Blacklist", Configuration.CATEGORY_GENERAL, false, "Inverts the tool blacklist to function as a whitelist");
 		ExcavationSettings.invertBBlacklist = config.getBoolean("Invert Block Blacklist", Configuration.CATEGORY_GENERAL, false, "Inverts the block blacklist to function as a whitelist");
 		ExcavationSettings.ignoreTools = config.getBoolean("Ignore Tool", Configuration.CATEGORY_GENERAL, false, "Ignores whether or not the held tool is valid");

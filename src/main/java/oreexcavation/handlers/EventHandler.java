@@ -140,7 +140,9 @@ public class EventHandler
 			return;
 		}
 		
-		if(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(event.world, event.block, event.blockMetadata, new BlockPos(event.x, event.y, event.z), player))
+		BlockPos p = new BlockPos(event.x, event.y, event.z);
+		
+		if(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(event.world, event.block, event.blockMetadata, p, player))
 		{
 			MiningAgent agent = MiningScheduler.INSTANCE.getActiveAgent(player.getUniqueID());
 			
@@ -152,6 +154,8 @@ public class EventHandler
 				tag.setInteger("z", event.z);
 				tag.setString("block", Block.blockRegistry.getNameForObject(event.block));
 				tag.setInteger("meta", event.blockMetadata);
+				tag.setInteger("side", ExcavateShape.getFacing(player, event.block, event.blockMetadata, p).ordinal());
+				
 				OreExcavation.instance.network.sendTo(new PacketExcavation(tag), player);
 			}
 		}

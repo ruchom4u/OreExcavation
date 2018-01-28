@@ -1,15 +1,20 @@
 package oreexcavation.shapes;
 
+import org.apache.logging.log4j.Level;
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import oreexcavation.core.OreExcavation;
 import oreexcavation.utils.BlockPos;
 import oreexcavation.utils.JsonHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
 
 public class ExcavateShape
 {
@@ -190,8 +195,8 @@ public class ExcavateShape
 	 *      Z+
 	 */
 	
-	/* NORTH (Z-) & EAST (X-)
-	 * SOUTH (Z+) & WEST (X+)*/
+	/* NORTH (Z-) & EAST (X+)
+	 * SOUTH (Z+) & WEST (X-)*/
 	private BlockPos rotate(BlockPos pos, EnumFacing facing)
 	{
 		switch(facing)
@@ -220,6 +225,39 @@ public class ExcavateShape
 		return msk;
 	}
 	
+	public static EnumFacing getFacing(EntityPlayer player, Block block, int meta, BlockPos pos)
+	{
+		MovingObjectPosition mop = null;
+		
+		try
+		{
+			double d = player.getDistance(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+			block.setBlockBoundsBasedOnState(player.worldObj, pos.getX(), pos.getY(), pos.getZ());
+			AxisAlignedBB aabb = AxisAlignedBB.getBoundingBox(block.getBlockBoundsMinX(), block.getBlockBoundsMinY(), block.getBlockBoundsMinZ(), block.getBlockBoundsMaxX(), block.getBlockBoundsMaxY(), block.getBlockBoundsMaxZ());
+			aabb.offset(pos.getX(), pos.getY(), pos.getZ());
+			Vec3 v = Vec3.createVectorHelper(player.posX, player.posY + player.eyeHeight, player.posZ);
+			Vec3 vl = player.getLookVec();
+			vl = Vec3.createVectorHelper(vl.xCoord * (d + 1D), vl.yCoord * (d + 1D), vl.zCoord * (d + 1D));
+			Vec3 v2 = v.addVector(vl.xCoord, vl.yCoord, vl.zCoord);
+			mop = aabb.calculateIntercept(v, v2);
+		} catch(Exception e)
+		{
+			OreExcavation.logger.log(Level.INFO, "Unable to excavation direction for player " + player.getDisplayName(), e);
+			mop = null;
+		}
+		
+		if(mop != null)
+		{
+			// Manually flip facing direction
+			int s = mop.sideHit - (mop.sideHit % 2);
+			s += (mop.sideHit + 1) % 2;
+			return EnumFacing.values()[s];
+		} else
+		{
+			return getFacing(player); // Fallback to player facing direction
+		}
+	}
+	
 	public static EnumFacing getFacing(EntityPlayer player)
 	{
 		Vec3 dir = player.getLookVec();
@@ -233,10 +271,10 @@ public class ExcavateShape
 		{
 			if(dir.xCoord > 0)
 			{
-				return EnumFacing.WEST;
+				return EnumFacing.EAST;
 			} else
 			{
-				return EnumFacing.EAST;
+				return EnumFacing.WEST;
 			}
 		} else if(az > ay && az > ax)
 		{
