@@ -1,5 +1,6 @@
 package oreexcavation.shapes;
 
+import org.apache.logging.log4j.Level;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.EnumFacing;
@@ -8,6 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import oreexcavation.core.OreExcavation;
 import oreexcavation.utils.JsonHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -225,12 +227,21 @@ public class ExcavateShape
 	
 	public static EnumFacing getFacing(EntityPlayer player, IBlockState state, BlockPos pos)
 	{
-		double d = player.getDistance(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
-		AxisAlignedBB aabb = state.getBoundingBox(player.world, pos);
-		Vec3d v = player.getPositionEyes(1F);
-		Vec3d v2 = v.add(player.getLookVec().scale(d + 1D));
-		aabb = aabb.offset(pos);
-		RayTraceResult rtr = aabb.calculateIntercept(v, v2);
+		RayTraceResult rtr = null;
+		
+		try
+		{
+			double d = player.getDistance(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+			AxisAlignedBB aabb = state.getBoundingBox(player.world, pos);
+			Vec3d v = player.getPositionEyes(1F);
+			Vec3d v2 = v.add(player.getLookVec().scale(d + 1D));
+			aabb = aabb.offset(pos);
+			rtr = aabb.calculateIntercept(v, v2);
+		} catch(Exception e)
+		{
+			OreExcavation.logger.log(Level.INFO, "Unable to excavation direction for player " + player.getName(), e);
+			rtr = null;
+		}
 		
 		if(rtr != null)
 		{
