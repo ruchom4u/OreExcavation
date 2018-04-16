@@ -9,7 +9,7 @@ import cpw.mods.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 public class GuiNumberField extends GuiTextField
 {
-	public static final String REGEX_NUMBER = "[^\\.0123456789-]";
+	public static final String REGEX_NUMBER = "[^.0123456789-]";
 	
 	public GuiNumberField(FontRenderer renderer, int posX, int posY, int sizeX, int sizeY)
 	{

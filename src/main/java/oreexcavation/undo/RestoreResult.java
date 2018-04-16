@@ -6,5 +6,5 @@ public enum RestoreResult
 	OBSTRUCTED,
 	INVALID_XP,
 	INVALID_ITEMS,
-	NO_UNDO_HISTORY;
+	NO_UNDO_HISTORY
 }

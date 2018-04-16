@@ -13,8 +13,8 @@ public class BlockGroups
 {
 	public static final BlockGroups INSTANCE = new BlockGroups();
 	
-	private final List<List<BlockEntry>> groupList = new ArrayList<List<BlockEntry>>();
-	private final List<BlockEntry> strictSubs = new ArrayList<BlockEntry>();
+	private final List<List<BlockEntry>> groupList = new ArrayList<>();
+	private final List<BlockEntry> strictSubs = new ArrayList<>();
 	
 	private BlockGroups()
 	{
@@ -22,7 +22,7 @@ public class BlockGroups
 	
 	public List<BlockEntry> getGroup(Block block, int metadata)
 	{
-		List<BlockEntry> list = new ArrayList<BlockEntry>();
+		List<BlockEntry> list = new ArrayList<>();
 		
 		for(List<BlockEntry> l2 : groupList)
 		{
@@ -68,7 +68,7 @@ public class BlockGroups
 				continue;
 			}
 			
-			List<BlockEntry> list = new ArrayList<BlockEntry>();
+			List<BlockEntry> list = new ArrayList<>();
 			
 			for(JsonElement je2 : je1.getAsJsonArray())
 			{

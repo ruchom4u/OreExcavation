@@ -26,9 +26,9 @@ public class MiningScheduler
 {
 	public static final MiningScheduler INSTANCE = new MiningScheduler();
 	
-	private ArrayDeque<MiningAgent> agents = new ArrayDeque<MiningAgent>();
-	private HashMap<String,ExcavateHistory> undoing = new HashMap<String,ExcavateHistory>();
-	private HashMap<UUID,List<ExcavateHistory>> undoHistory = new HashMap<UUID,List<ExcavateHistory>>();
+	private ArrayDeque<MiningAgent> agents = new ArrayDeque<>();
+	private HashMap<String,ExcavateHistory> undoing = new HashMap<>();
+	private HashMap<UUID,List<ExcavateHistory>> undoHistory = new HashMap<>();
 	
 	private Stopwatch timer;
 	
@@ -104,7 +104,7 @@ public class MiningScheduler
 	
 	public RestoreResult attemptUndo(EntityPlayer player)
 	{
-		RestoreResult result = RestoreResult.NO_UNDO_HISTORY;
+		RestoreResult result;
 		List<ExcavateHistory> list = undoHistory.get(player.getUniqueID());
 		list = list != null? list : new ArrayList<ExcavateHistory>();
 		
@@ -155,6 +155,11 @@ public class MiningScheduler
 			}
 			
 			MiningAgent a = agents.poll();
+			
+			if(a == null)
+			{
+				continue;
+			}
 			
 			EventHandler.captureAgent = a;
 			boolean complete = a.tickMiner(timer);

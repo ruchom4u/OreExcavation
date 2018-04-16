@@ -8,7 +8,7 @@ public class BlockBlacklist
 {
 	public static final BlockBlacklist INSTANCE = new BlockBlacklist();
 	
-	private final List<BlockEntry> banList = new ArrayList<BlockEntry>();
+	private final List<BlockEntry> banList = new ArrayList<>();
 	
 	private BlockBlacklist()
 	{

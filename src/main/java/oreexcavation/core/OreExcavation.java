@@ -17,13 +17,10 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 
-@Mod(modid = OreExcavation.MODID, version = OreExcavation.VERSION, name = OreExcavation.NAME, guiFactory = OreExcavation.MODID + ".handlers.ConfigGuiFactory")
+@Mod(modid = OreExcavation.MODID, name = OreExcavation.NAME, guiFactory = OreExcavation.MODID + ".handlers.ConfigGuiFactory")
 public class OreExcavation
 {
     public static final String MODID = "oreexcavation";
-    public static final String VERSION = "CI_MOD_VERSION";
-    public static final String BRANCH = "CI_MOD_BRANCH";
-    public static final String HASH = "CI_MOD_HASH";
     public static final String NAME = "OreExcavation";
     public static final String PROXY = MODID + ".core.proxies";
     public static final String CHANNEL = "OE_CHAN";

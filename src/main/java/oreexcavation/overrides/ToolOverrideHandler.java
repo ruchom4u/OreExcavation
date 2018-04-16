@@ -1,6 +1,8 @@
 package oreexcavation.overrides;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.utils.JsonHelper;
 import net.minecraft.item.ItemStack;
@@ -11,7 +13,7 @@ import com.google.gson.JsonObject;
 public final class ToolOverrideHandler
 {
 	public static ToolOverrideHandler INSTANCE = new ToolOverrideHandler();
-	private ArrayList<ToolOverride> list = new ArrayList<ToolOverride>();
+	private List<ToolOverride> list = new ArrayList<>();
 	
 	private ToolOverrideHandler()
 	{

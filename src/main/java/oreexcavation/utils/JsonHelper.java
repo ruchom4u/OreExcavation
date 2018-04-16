@@ -1,13 +1,8 @@
 package oreexcavation.utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+
 import oreexcavation.core.OreExcavation;
 import org.apache.logging.log4j.Level;
 import com.google.gson.Gson;
@@ -17,6 +12,8 @@ import com.google.gson.JsonObject;
 
 public class JsonHelper
 {
+	private static Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+	
 	public static JsonArray GetArray(JsonObject json, String id)
 	{
 		if(json == null)
@@ -119,7 +116,7 @@ public class JsonHelper
 		try
 		{
 			InputStreamReader fr = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8);
-			JsonObject json = new Gson().fromJson(fr, JsonObject.class);
+			JsonObject json = GSON.fromJson(fr, JsonObject.class);
 			fr.close();
 			return json;
 		} catch(Exception e)
@@ -154,45 +151,61 @@ public class JsonHelper
 				}
 				file.createNewFile();
 			}
-			
-			OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
-			new GsonBuilder().setPrettyPrinting().create().toJson(jObj, fw);
-			fw.close();
 		} catch(Exception e)
 		{
 			OreExcavation.logger.log(Level.ERROR, "An error occured while saving JSON to file:", e);
 			return;
 		}
+		
+		try(OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))
+		{
+			GSON.toJson(jObj, fw);
+			fw.flush();
+		} catch(Exception e)
+		{
+			OreExcavation.logger.log(Level.ERROR, "An error occured while saving JSON to file:", e);
+		}
 	}
 	
 	public static void CopyPaste(File fileIn, File fileOut)
 	{
-		//final int bufferSize = 0x100000;
-		
-		BufferedReader fr = null;
-		BufferedWriter fw = null;
+		if(!fileIn.exists())
+		{
+			return;
+		}
 		
 		try
 		{
-			fr = new BufferedReader(new InputStreamReader(new FileInputStream(fileIn), StandardCharsets.UTF_8));
-			fw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileOut), StandardCharsets.UTF_8));
-			
+			if(!fileOut.exists())
+			{
+				if(fileOut.getParentFile() != null)
+				{
+					fileOut.getParentFile().mkdirs();
+				}
+				
+				fileOut.createNewFile();
+			} else
+			{
+				throw new IOException("File already exists!");
+			}
+		} catch(Exception e)
+		{
+			OreExcavation.logger.log(Level.ERROR, "Failed copy paste", e);
+			return;
+		}
+		
+		try(BufferedReader fr = new BufferedReader(new InputStreamReader(new FileInputStream(fileIn), StandardCharsets.UTF_8));
+			BufferedWriter fw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileOut), StandardCharsets.UTF_8)))
+		{
 			char[] buffer = new char[256];
 			int read;
 			while((read = fr.read(buffer)) != -1)
 			{
 				fw.write(buffer, 0, read);
 			}
-		} catch(Exception e1)
+		} catch(Exception e)
 		{
-			OreExcavation.logger.log(Level.ERROR, "Failed copy paste", e1);
-		} finally
-		{
-			try
-			{
-				fr.close();
-				fw.close();
-			} catch(Exception e2){}
+			OreExcavation.logger.log(Level.ERROR, "Failed copy paste", e);
 		}
 	}
 }

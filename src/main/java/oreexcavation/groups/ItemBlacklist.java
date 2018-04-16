@@ -8,7 +8,7 @@ public class ItemBlacklist
 {
 	public static final ItemBlacklist INSTANCE = new ItemBlacklist();
 	
-	private final List<ItemEntry> banList = new ArrayList<ItemEntry>();
+	private final List<ItemEntry> banList = new ArrayList<>();
 	
 	private ItemBlacklist()
 	{
