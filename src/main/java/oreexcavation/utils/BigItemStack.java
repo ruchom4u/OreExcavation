@@ -1,6 +1,8 @@
 package oreexcavation.utils;
 
 import java.util.ArrayList;
+import java.util.List;
+
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
@@ -15,7 +17,7 @@ public class BigItemStack
 {
 	public int stackSize = 0;
 	public String oreDict = "";
-	ItemStack baseStack = new ItemStack(Blocks.STONE); // Ensures that this base stack is never null
+	private ItemStack baseStack;
 	
 	public BigItemStack(ItemStack stack)
 	{
@@ -90,9 +92,9 @@ public class BigItemStack
 	/**
 	 * Breaks down this big stack into smaller ItemStacks for Minecraft to use (Individual stack size is dependent on the item)
 	 */
-	public ArrayList<ItemStack> getCombinedStacks()
+	public List<ItemStack> getCombinedStacks()
 	{
-		ArrayList<ItemStack> list = new ArrayList<ItemStack>();
+		List<ItemStack> list = new ArrayList<>();
 		int tmp1 = Math.max(1, stackSize); // Guarantees this method will return at least 1 item
 		
 		while(tmp1 > 0)

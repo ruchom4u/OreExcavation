@@ -6,5 +6,5 @@ import oreexcavation.handlers.MiningAgent;
 
 public interface IExcavateFilter
 {
-	public boolean canHarvest(EntityPlayerMP player, MiningAgent agent, BlockPos pos);
+	boolean canHarvest(EntityPlayerMP player, MiningAgent agent, BlockPos pos);
 }

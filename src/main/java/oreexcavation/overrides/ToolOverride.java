@@ -8,11 +8,11 @@ public class ToolOverride
 {
 	private ItemEntry itemType;
 	
-	private int speed = 64;
-	private int limit = 128;
-	private int range = 16;
-	private float exaustion = 0.1F;
-	private int experience = 0;
+	private int speed;
+	private int limit;
+	private int range;
+	private float exaustion;
+	private int experience;
 	
 	public ToolOverride(ItemEntry itemType)
 	{

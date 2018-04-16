@@ -12,7 +12,7 @@ public class ShapeRegistry
 {
 	public static final ShapeRegistry INSTANCE = new ShapeRegistry();
 	
-	private List<ExcavateShape> shapeList = new ArrayList<ExcavateShape>();
+	private List<ExcavateShape> shapeList = new ArrayList<>();
 	private int curShape = 0;
 	
 	private ShapeRegistry()
