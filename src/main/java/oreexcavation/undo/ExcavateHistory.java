@@ -21,8 +21,8 @@ import com.google.common.base.Stopwatch;
 
 public class ExcavateHistory
 {
-	private final List<BlockHistory> history = new ArrayList<BlockHistory>();
-	private final List<BigItemStack> stacks = new ArrayList<BigItemStack>();
+	private final List<BlockHistory> history = new ArrayList<>();
+	private final List<BigItemStack> stacks = new ArrayList<>();
 	private long experience = 0;
 	
 	private final Stopwatch timer;
@@ -93,7 +93,7 @@ public class ExcavateHistory
 			{
 				ItemStack invoStack = player.inventory.getStackInSlot(i);
 				
-				if(invoStack != null)
+				if(!invoStack.isEmpty())
 				{
 					for(int n = 0; n < req.length; n++)
 					{
@@ -147,7 +147,7 @@ public class ExcavateHistory
 				{
 					ItemStack invoStack = player.inventory.getStackInSlot(i);
 					
-					if(invoStack != null && stack.equals(invoStack))
+					if(!invoStack.isEmpty() && stack.equals(invoStack))
 					{
 						int num = Math.min(stack.stackSize, invoStack.getCount());
 						player.inventory.decrStackSize(i, num);

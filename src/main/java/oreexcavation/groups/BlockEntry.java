@@ -60,14 +60,17 @@ public class BlockEntry
 	
 	private boolean checkOre(Block block, int metadata)
 	{
-		if(oreDict.equals("*"))
+		if(oreDict == null)
+		{
+			return false;
+		} else if(oreDict.equals("*"))
 		{
 			return true; // For the morbidly curious
 		}
 		
 		Item itemBlock = Item.getItemFromBlock(block);
 		
-		if(itemBlock == null || itemBlock == Items.AIR)
+		if(itemBlock == Items.AIR)
 		{
 			return false;
 		}
@@ -101,9 +104,9 @@ public class BlockEntry
 		} else if(split.length == 2) // Simple ID
 		{
 			return new BlockEntry(new ResourceLocation(split[0], split[1]), -1);
-		} else if(split.length == 3) // ID and Subtype
+		} else // ID and Subtype
 		{
-			int meta = -1;
+			int meta;
 			
 			try
 			{
@@ -116,7 +119,5 @@ public class BlockEntry
 			
 			return new BlockEntry(new ResourceLocation(split[0], split[1]), meta);
 		}
-		
-		return null;
 	}
 }

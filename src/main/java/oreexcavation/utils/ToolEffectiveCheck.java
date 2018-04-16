@@ -19,14 +19,14 @@ public class ToolEffectiveCheck
 			return false;
 		}
 		
-		if(!ExcavationSettings.openHand && player.getHeldItem(EnumHand.MAIN_HAND).isEmpty())
+		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
+		
+		if(ExcavationSettings.openHand && held.isEmpty())
 		{
-			return false;
+			return state.getBlock().canHarvestBlock(world, pos, player);
 		} else if(ExcavationSettings.toolClass)
 		{
-			ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
-			
-			if(held == null || held.isEmpty())
+			if(held.isEmpty())
 			{
 				return false;
 			}
@@ -50,12 +50,15 @@ public class ToolEffectiveCheck
 			return false;
 		} else if(ExcavationSettings.altTools)
 		{
-			ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
-			
-			if(held != null && held.getStrVsBlock(state) > 1F)
+			if(!held.isEmpty() && held.getDestroySpeed(state) > 1F)
 			{
 				return true;
 			}
+		}
+		
+		if(!held.isEmpty() && held.getItem() instanceof ItemShears && state.getBlock() instanceof IShearable)
+		{
+			return true;
 		}
 		
 		return state.getBlock().canHarvestBlock(world, pos, player);

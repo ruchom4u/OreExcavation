@@ -58,22 +58,14 @@ public class PacketExcavation implements IMessage
 		{
 			final EntityPlayerMP player = ctx.getServerHandler().player;
 			
-			if(player == null)
+			if(player == null || player.getServer() == null)
 			{
 				return null;
 			}
 			
 			if(message.tags.getBoolean("cancel"))
 			{
-				player.getServer().addScheduledTask(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						MiningScheduler.INSTANCE.stopMining(player);
-					}
-					
-				});
+				player.getServer().addScheduledTask(() -> MiningScheduler.INSTANCE.stopMining(player));
 				return null;
 			}
 			
@@ -83,7 +75,7 @@ public class PacketExcavation implements IMessage
 
 			final IBlockState state = Block.getStateById(message.tags.getInteger("stateId"));
 			
-			if(state == null || state.getBlock() == Blocks.AIR)
+			if(state.getBlock() == Blocks.AIR)
 			{
 				OreExcavation.logger.log(Level.INFO, "Recieved invalid block ID");
 			}
@@ -120,14 +112,7 @@ public class PacketExcavation implements IMessage
 				facing = EnumFacing.NORTH;
 			}
 			
-			player.getServer().addScheduledTask(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					MiningScheduler.INSTANCE.startMining(player, new BlockPos(x, y, z), state, shape, facing);
-				}
-			});
+			player.getServer().addScheduledTask(() -> MiningScheduler.INSTANCE.startMining(player, new BlockPos(x, y, z), state, shape, facing));
 			
 			return null;
 		}

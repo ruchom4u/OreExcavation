@@ -234,7 +234,7 @@ public class EventHandler
 	
 	public static boolean isBlockBlacklisted(IBlockState state)
 	{
-		if(state == null || state.getBlock() == null || state.getBlock() == Blocks.AIR)
+		if(state == null || state.getBlock() == Blocks.AIR)
 		{
 			return false;
 		}
