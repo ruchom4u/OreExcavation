@@ -11,6 +11,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -37,9 +38,9 @@ import com.google.common.base.Stopwatch;
 public class MiningAgent
 {
 	private ItemStack blockStack = null;
-	private Item origTool = null;
-	private final List<BlockPos> mined = new ArrayList<BlockPos>();
-	private final ArrayDeque<BlockPos> scheduled = new ArrayDeque<BlockPos>();
+	private Item origTool;
+	private final List<BlockPos> mined = new ArrayList<>();
+	private final ArrayDeque<BlockPos> scheduled = new ArrayDeque<>();
 	public final EntityPlayerMP player;
 	public final BlockPos origin;
 	public final UUID playerID;
@@ -47,8 +48,8 @@ public class MiningAgent
 	public ExcavateShape shape = null;
 	private final ExcavateHistory history;
 	
-	public final List<BlockEntry> blockGroup = new ArrayList<BlockEntry>();
-	private final List<IExcavateFilter> filters = new ArrayList<IExcavateFilter>();
+	public final List<BlockEntry> blockGroup = new ArrayList<>();
+	private final List<IExcavateFilter> filters = new ArrayList<>();
 	public final IBlockState state;
 	private final Block block;
 	private final int meta;
@@ -58,7 +59,7 @@ public class MiningAgent
 	private boolean subtypes = true; // Ignore metadata
 	private boolean strictSubs = false; // Disables subtypes and item block equality
 	
-	private final List<BigItemStack> drops = new ArrayList<BigItemStack>();
+	private final List<BigItemStack> drops = new ArrayList<>();
 	private int experience = 0;
 	
 	public MiningAgent(EntityPlayerMP player, BlockPos origin, IBlockState state)
@@ -112,12 +113,15 @@ public class MiningAgent
 				{
 					blockStack = null;
 				}
-			} catch(Exception e){}
+			} catch(Exception e)
+			{
+				blockStack = null;
+			}
 		}
 		
 		if(!strictSubs)
 		{
-			this.subtypes = blockStack == null? true : !blockStack.getHasSubtypes();
+			this.subtypes = blockStack == null || !blockStack.getHasSubtypes();
 		} else
 		{
 			this.subtypes = false;
@@ -202,12 +206,15 @@ public class MiningAgent
 			
 			if(!flag && blockStack != null && !strictSubs)
 			{
-				ItemStack stack = null;
+				ItemStack stack;
 				
 				try
 				{
 					stack = (ItemStack)m_createStack.invoke(b, s);
-				} catch(Exception e){}
+				} catch(Exception e)
+				{
+					stack = null;
+				}
 				
 				if(stack != null && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
 				{
@@ -227,7 +234,7 @@ public class MiningAgent
 				{
 					mined.add(pos);
 					continue;
-				} else if(player.interactionManager.tryHarvestBlock(pos))
+				} else if(player.interactionManager.tryHarvestBlock(pos) || player.worldObj.getBlockState(pos).getBlock() == Blocks.AIR)
 				{
 					if(ExcavationSettings.maxUndos > 0)
 					{
@@ -268,6 +275,9 @@ public class MiningAgent
 							}
 						}
 					}
+				} else
+				{
+					OreExcavation.logger.warn("Block harvest failed unexpectedly.\nBlock: " + s + "\nTool: " + heldStack + "\nPos: " + pos.toString());
 				}
 				
 				player.worldObj.capturedBlockSnapshots.clear();
@@ -344,7 +354,7 @@ public class MiningAgent
 		
 		if(this.experience > 0)
 		{
-			EntityXPOrb orb = null;
+			EntityXPOrb orb;
 			
 			if(ExcavationSettings.autoPickup)
 			{

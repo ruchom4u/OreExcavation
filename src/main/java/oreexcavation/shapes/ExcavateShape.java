@@ -126,17 +126,17 @@ public class ExcavateShape
 		
 		for(int y = 4; y >= 0; y--)
 		{
-			String row = "";
+			StringBuilder sb = new StringBuilder();
 			
 			for(int x = 0; x < 5; x++)
 			{
 				int mask = posToMask(x, y);
 				
 				boolean valid = (this.shape & mask) == mask;
-				row = row + (valid? "X" : "O");
+				sb.append(valid? "X" : "O");
 			}
 			
-			jmsk.add(new JsonPrimitive(row));
+			jmsk.add(new JsonPrimitive(sb.toString()));
 		}
 		
 		json.add("mask", jmsk);
@@ -221,19 +221,18 @@ public class ExcavateShape
 	public static int posToMask(int x, int y)
 	{
 		int idx = (y * 5) + x;
-		int msk = (int)Math.pow(2, idx);
-		return msk;
+		return (int)Math.pow(2, idx);
 	}
 	
 	public static EnumFacing getFacing(EntityPlayer player, IBlockState state, BlockPos pos)
 	{
-		RayTraceResult rtr = null;
+		RayTraceResult rtr;
 		
 		try
 		{
 			double d = player.getDistance(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
 			AxisAlignedBB aabb = state.getBoundingBox(player.worldObj, pos);
-			Vec3d v = player.getPositionEyes(1F);
+            Vec3d v = new Vec3d(player.posX, player.posY + (double)player.getEyeHeight(), player.posZ);
 			Vec3d v2 = v.add(player.getLookVec().scale(d + 1D));
 			aabb = aabb.offset(pos);
 			rtr = aabb.calculateIntercept(v, v2);

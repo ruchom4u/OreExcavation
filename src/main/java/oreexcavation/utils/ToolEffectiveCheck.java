@@ -19,13 +19,13 @@ public class ToolEffectiveCheck
 			return false;
 		}
 		
-		if(!ExcavationSettings.openHand && player.getHeldItem(EnumHand.MAIN_HAND) == null)
+		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
+		
+		if(ExcavationSettings.openHand && held == null)
 		{
-			return false;
+			return state.getBlock().canHarvestBlock(world, pos, player);
 		} else if(ExcavationSettings.toolClass)
 		{
-			ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
-			
 			if(held == null)
 			{
 				return false;
@@ -50,12 +50,15 @@ public class ToolEffectiveCheck
 			return false;
 		} else if(ExcavationSettings.altTools)
 		{
-			ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
-			
 			if(held != null && held.getStrVsBlock(state) > 1F)
 			{
 				return true;
 			}
+		}
+		
+		if(held != null && held.getItem() instanceof ItemShears && state.getBlock() instanceof IShearable)
+		{
+			return true;
 		}
 		
 		return state.getBlock().canHarvestBlock(world, pos, player);

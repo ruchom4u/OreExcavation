@@ -41,12 +41,15 @@ public class ItemEntry
 		
 		ResourceLocation r = Item.REGISTRY.getNameForObject(stack.getItem());
 		
-		return r.equals(idName) && (subType < 0 || subType == OreDictionary.WILDCARD_VALUE || subType == stack.getMetadata());
+		return r != null && r.equals(idName) && (subType < 0 || subType == OreDictionary.WILDCARD_VALUE || subType == stack.getMetadata());
 	}
 	
 	private boolean checkOre(ItemStack stack)
 	{
-		if(oreDict.equals("*"))
+		if(oreDict == null)
+		{
+			return false;
+		} else if(oreDict.equals("*"))
 		{
 			return true;
 		}
@@ -80,9 +83,9 @@ public class ItemEntry
 		} else if(split.length == 2) // Simple ID
 		{
 			return new ItemEntry(new ResourceLocation(split[0], split[1]), -1);
-		} else if(split.length == 3) // ID and Subtype
+		} else // ID and Subtype
 		{
-			int meta = -1;
+			int meta;
 			
 			try
 			{
@@ -95,7 +98,5 @@ public class ItemEntry
 			
 			return new ItemEntry(new ResourceLocation(split[0], split[1]), meta);
 		}
-		
-		return null;
 	}
 }

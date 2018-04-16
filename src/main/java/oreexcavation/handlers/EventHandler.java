@@ -223,7 +223,7 @@ public class EventHandler
 	@SubscribeEvent
 	public void onWorldUnload(WorldEvent.Unload event)
 	{
-		if(event.getWorld().isRemote || event.getWorld().getMinecraftServer().isServerRunning())
+		if(event.getWorld().isRemote || event.getWorld().getMinecraftServer() == null || event.getWorld().getMinecraftServer().isServerRunning())
 		{
 			return;
 		}
@@ -234,7 +234,7 @@ public class EventHandler
 	
 	public static boolean isBlockBlacklisted(IBlockState state)
 	{
-		if(state == null || state.getBlock() == null || state.getBlock() == Blocks.AIR)
+		if(state == null || state.getBlock() == Blocks.AIR)
 		{
 			return false;
 		}

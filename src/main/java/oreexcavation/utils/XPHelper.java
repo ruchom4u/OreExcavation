@@ -44,7 +44,7 @@ public class XPHelper
 	
 	public static long getPlayerXP(EntityPlayer player)
 	{
-		return getLevelXP(player.experienceLevel) + (long)Math.round(xpBarCap(player) * (double)player.experience);
+		return getLevelXP(player.experienceLevel) + Math.round(xpBarCap(player) * (double)player.experience);
 	}
 	
 	public static long xpBarCap(EntityPlayer player)
