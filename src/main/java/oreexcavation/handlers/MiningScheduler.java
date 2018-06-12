@@ -68,6 +68,7 @@ public class MiningScheduler
 		return startMining(player, pos, state, shape, ExcavateShape.getFacing(player));
 	}
 	
+	@Deprecated
 	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state)
 	{
 		return startMining(player, pos, state, null, EnumFacing.NORTH);
@@ -205,5 +206,7 @@ public class MiningScheduler
 		agents.clear();
 		undoing.clear();
 		undoHistory.clear();
+
+		timer.reset();
 	}
 }

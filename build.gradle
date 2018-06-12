@@ -23,7 +23,10 @@ targetCompatibility = 1.8
 minecraft {
     version = project.forgeVersion
     runDir = "run"
-
+    
+    replace "@VERSION@", project.version
+    replaceIn project.modBaseClass
+    
     // the mappings can be changed at any time, and must be in the following format.
     // snapshot_YYYYMMDD   snapshot are built nightly.
     // stable_#            stables are built at the discretion of the MCP team.
@@ -35,9 +38,11 @@ minecraft {
 
 repositories {
     mavenCentral()
+    maven { url 'https://maven.mcmoddev.com' }
 }
 
 dependencies {
+    compile "net.darkhax.gamestages:GameStages-${version_minecraft}:${version_gamestages}"
 }
 
 processResources {

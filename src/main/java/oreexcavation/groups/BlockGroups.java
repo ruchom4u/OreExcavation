@@ -1,7 +1,11 @@
 package oreexcavation.groups;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import net.minecraft.block.state.IBlockState;
 import oreexcavation.utils.JsonHelper;
 import com.google.gson.JsonArray;
@@ -13,11 +17,25 @@ public class BlockGroups
 {
 	public static final BlockGroups INSTANCE = new BlockGroups();
 	
+	private final Map<BlockEntry, String> staged = new HashMap<>();
 	private final List<List<BlockEntry>> groupList = new ArrayList<>();
 	private final List<BlockEntry> strictSubs = new ArrayList<>();
 	
 	private BlockGroups()
 	{
+	}
+	
+	public String getStage(IBlockState state)
+	{
+		for(Entry<BlockEntry, String> entry : staged.entrySet())
+		{
+			if(entry.getKey().checkMatch(state))
+			{
+				return entry.getValue();
+			}
+		}
+		
+		return null;
 	}
 	
 	public List<BlockEntry> getGroup(IBlockState state)
@@ -46,6 +64,11 @@ public class BlockGroups
 	
 	public boolean quickCheck(List<BlockEntry> list, IBlockState state)
 	{
+		if(list == null || state == null)
+		{
+			return false;
+		}
+		
 		for(BlockEntry e : list)
 		{
 			if(e != null && e.checkMatch(state))
@@ -107,6 +130,21 @@ public class BlockGroups
 				strictSubs.add(entry);
 			}
 		}
+		
+		for(Entry<String, JsonElement> entry : JsonHelper.GetObject(json, "gamestages").entrySet())
+		{
+			if(entry.getValue() == null || !entry.getValue().isJsonPrimitive())
+			{
+				continue;
+			}
+			
+			BlockEntry be = BlockEntry.readFromString(entry.getKey());
+			
+			if(be != null)
+			{
+				staged.put(be, entry.getValue().getAsString());
+			}
+		}
 	}
 	
 	public JsonObject getDefaultJson()
@@ -131,6 +169,11 @@ public class BlockGroups
 		ary1.add(new JsonPrimitive("cropCarrot"));
 		ary1.add(new JsonPrimitive("cropNetherWart"));
 		json.add("strictSubtypes", ary1);
+		
+		JsonObject obj2 = new JsonObject();
+		obj2.addProperty("examplemod:example_block1", "example_stage1");
+		obj2.addProperty("examplemod:example_block2", "example_stage2");
+		json.add("gamestages", obj2);
 		
 		return json;
 	}

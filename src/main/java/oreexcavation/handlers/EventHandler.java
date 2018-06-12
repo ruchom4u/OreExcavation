@@ -1,5 +1,7 @@
 package oreexcavation.handlers;
 
+import net.darkhax.gamestages.data.GameStageSaveHandler;
+import net.darkhax.gamestages.data.IStageData;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -10,6 +12,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.StringUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraftforge.common.util.FakePlayer;
@@ -29,8 +32,12 @@ import oreexcavation.client.GuiEditShapes;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.groups.BlockBlacklist;
+import oreexcavation.groups.BlockGroups;
 import oreexcavation.groups.ItemBlacklist;
 import oreexcavation.network.PacketExcavation;
+import oreexcavation.overrides.ToolOverride;
+import oreexcavation.overrides.ToolOverrideDefault;
+import oreexcavation.overrides.ToolOverrideHandler;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
 import oreexcavation.utils.ToolEffectiveCheck;
@@ -144,6 +151,30 @@ public class EventHandler
 		
 		BlockPos p = event.getPos();
 		IBlockState s = event.getState();
+		
+		// === Game Stages ===
+		if(ExcavationSettings.gamestagesInstalled)
+		{
+			IStageData stage = GameStageSaveHandler.getPlayerData(player.getUniqueID());
+			
+			if(stage != null)
+			{
+				ToolOverride tover = ToolOverrideHandler.INSTANCE.getOverride(player.getHeldItem(EnumHand.MAIN_HAND));
+				tover = tover != null ? tover : ToolOverrideDefault.DEFAULT;
+				
+				if(!StringUtils.isNullOrEmpty(tover.getGameStage()) && !stage.hasStage(tover.getGameStage()))
+				{
+					return;
+				}
+				
+				String blockStage = BlockGroups.INSTANCE.getStage(s);
+				
+				if(!StringUtils.isNullOrEmpty(blockStage) && !stage.hasStage(blockStage))
+				{
+					return;
+				}
+			}
+		}
 		
 		if(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(event.getWorld(), s, p, player))
 		{

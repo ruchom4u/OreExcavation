@@ -3,6 +3,7 @@ package oreexcavation.core;
 import net.minecraft.command.ServerCommandManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.common.config.Configuration;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
@@ -17,7 +18,7 @@ import oreexcavation.core.proxies.CommonProxy;
 import oreexcavation.handlers.ConfigHandler;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = OreExcavation.MODID, name = OreExcavation.NAME, guiFactory = OreExcavation.MODID + ".handlers.ConfigGuiFactory")
+@Mod(modid = OreExcavation.MODID, version = "@VERSION@", name = OreExcavation.NAME, guiFactory = OreExcavation.MODID + ".handlers.ConfigGuiFactory")
 public class OreExcavation
 {
     public static final String MODID = "oreexcavation";
@@ -53,6 +54,7 @@ public class OreExcavation
     @EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
+        ExcavationSettings.gamestagesInstalled = Loader.isModLoaded("gamestages");
     }
     
     @EventHandler

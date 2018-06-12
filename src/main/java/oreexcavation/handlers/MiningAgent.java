@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import net.darkhax.gamestages.data.GameStageSaveHandler;
+import net.darkhax.gamestages.data.IStageData;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
@@ -16,6 +19,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.StringUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
@@ -39,7 +43,12 @@ public class MiningAgent
 {
 	private ItemStack blockStack = null;
 	private Item origTool;
-	private final List<BlockPos> mined = new ArrayList<>();
+	
+	/**
+	 * List of blocks actually checkedBlocks. Does not have any affect on harvesting and is purely for reference.
+	 */
+	public final List<BlockPos> minedBlocks = new ArrayList<>();
+	private final List<BlockPos> checkedBlocks = new ArrayList<>();
 	private final ArrayDeque<BlockPos> scheduled = new ArrayDeque<>();
 	public final EntityPlayerMP player;
 	public final BlockPos origin;
@@ -59,8 +68,8 @@ public class MiningAgent
 	private boolean subtypes = true; // Ignore metadata
 	private boolean strictSubs = false; // Disables subtypes and item block equality
 	
-	private final List<BigItemStack> drops = new ArrayList<>();
-	private int experience = 0;
+	public final List<BigItemStack> drops = new ArrayList<>();
+	public int experience = 0;
 	
 	public MiningAgent(EntityPlayerMP player, BlockPos origin, IBlockState state)
 	{
@@ -151,14 +160,14 @@ public class MiningAgent
 	 */
 	public boolean tickMiner(Stopwatch timer)
 	{
-		if(origin == null || player == null || !player.isEntityAlive() || mined.size() >= toolProps.getLimit())
+		if(origin == null || player == null || !player.isEntityAlive() || checkedBlocks.size() >= toolProps.getLimit())
 		{
 			return true;
 		}
 		
 		for(int n = 0; !scheduled.isEmpty(); n++)
 		{
-			if(n >= toolProps.getSpeed() || mined.size() >= toolProps.getLimit())
+			if(n >= toolProps.getSpeed() || checkedBlocks.size() >= toolProps.getLimit())
 			{
 				break;
 			}
@@ -187,7 +196,7 @@ public class MiningAgent
 				continue;
 			} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange())
 			{
-				mined.add(pos);
+				checkedBlocks.add(pos);
 				continue;
 			}
 			
@@ -197,7 +206,7 @@ public class MiningAgent
 			
 			if(EventHandler.isBlockBlacklisted(s) || !b.canCollideCheck(s, false))
 			{
-				mined.add(pos);
+				checkedBlocks.add(pos);
 				continue;
 			}
 			
@@ -222,6 +231,23 @@ public class MiningAgent
 				}
 			}
 			
+			// === Game Stages ===
+			if(ExcavationSettings.gamestagesInstalled)
+			{
+				IStageData stage = GameStageSaveHandler.getPlayerData(player.getUniqueID());
+			
+				if(stage != null)
+				{
+					String blockStage = BlockGroups.INSTANCE.getStage(s);
+					
+					if(!StringUtils.isNullOrEmpty(blockStage) && !stage.hasStage(blockStage))
+					{
+						checkedBlocks.add(pos);
+						continue;
+					}
+				}
+			}
+			
 			if(flag)
 			{
 				if(ExcavationSettings.maxUndos > 0)
@@ -232,7 +258,7 @@ public class MiningAgent
 				
 				if(!ExcavationSettings.ignoreTools && !ToolEffectiveCheck.canHarvestBlock(player.world, s, pos, player))
 				{
-					mined.add(pos);
+					checkedBlocks.add(pos);
 					continue;
 				} else if(player.interactionManager.tryHarvestBlock(pos) || player.world.getBlockState(pos).getBlock() == Blocks.AIR)
 				{
@@ -275,6 +301,8 @@ public class MiningAgent
 							}
 						}
 					}
+					
+					minedBlocks.add(pos);
 				} else
 				{
 					OreExcavation.logger.warn("Block harvest failed unexpectedly.\nBlock: " + s + "\nTool: " + heldStack + "\nPos: " + pos.toString());
@@ -283,7 +311,7 @@ public class MiningAgent
 				player.world.capturedBlockSnapshots.clear();
 				player.world.captureBlockSnapshots = false;
 				
-				mined.add(pos);
+				checkedBlocks.add(pos);
 			}
 		}
 		
@@ -292,7 +320,7 @@ public class MiningAgent
 			XPHelper.syncXP(player);
 		}
 		
-		return scheduled.size() <= 0 || mined.size() >= toolProps.getLimit();
+		return scheduled.size() <= 0 || checkedBlocks.size() >= toolProps.getLimit();
 	}
 	
 	/**
@@ -300,7 +328,7 @@ public class MiningAgent
 	 */
 	public void appendBlock(BlockPos pos)
 	{
-		if(pos == null || mined.contains(pos) || scheduled.contains(pos))
+		if(pos == null || checkedBlocks.contains(pos) || scheduled.contains(pos))
 		{
 			return;
 		} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange() || !player.world.getWorldBorder().contains(pos) || !player.canPlayerEdit(pos, facing, player.getHeldItemMainhand()))
@@ -394,7 +422,7 @@ public class MiningAgent
 	
 	public boolean hasMinedPosition(BlockPos pos)
 	{
-		return mined.contains(pos);
+		return checkedBlocks.contains(pos);
 	}
 	
 	public ExcavateHistory getHistory()

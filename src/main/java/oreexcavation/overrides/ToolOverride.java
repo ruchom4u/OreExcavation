@@ -13,6 +13,7 @@ public class ToolOverride
 	private int range;
 	private float exaustion;
 	private int experience;
+	private String gamestage;
 	
 	public ToolOverride(ItemEntry itemType)
 	{
@@ -23,6 +24,7 @@ public class ToolOverride
 		this.range = ExcavationSettings.mineRange;
 		this.exaustion = ExcavationSettings.exaustion;
 		this.experience = ExcavationSettings.experience;
+		this.gamestage = ExcavationSettings.gamestage;
 	}
 	
 	public boolean isApplicable(ItemStack stack)
@@ -83,6 +85,16 @@ public class ToolOverride
 	public int getExperience()
 	{
 		return experience;
+	}
+	
+	public void setGameStage(String s)
+	{
+		this.gamestage = s;
+	}
+	
+	public String getGameStage()
+	{
+		return this.gamestage;
 	}
 	
 	public static ToolOverride readFromString(String s)

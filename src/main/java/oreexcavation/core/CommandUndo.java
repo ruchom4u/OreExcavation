@@ -15,13 +15,13 @@ public class CommandUndo extends CommandBase
 	@Override
 	public String getName()
 	{
-		return "undo_excavation";
+		return "excavate_undo";
 	}
 	
 	@Override
 	public String getUsage(ICommandSender sender)
 	{
-		return "/undo_excavation";
+		return "/excavate_undo";
 	}
 	
 	@Override

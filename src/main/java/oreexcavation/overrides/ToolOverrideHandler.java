@@ -42,6 +42,7 @@ public final class ToolOverrideHandler
 			to.setRange(JsonHelper.GetNumber(jo, "range", ExcavationSettings.mineRange).intValue());
 			to.setExaustion(JsonHelper.GetNumber(jo, "exaustion", ExcavationSettings.exaustion).floatValue());
 			to.setExperience(JsonHelper.GetNumber(jo, "experience", ExcavationSettings.experience).intValue());
+			to.setGameStage(JsonHelper.GetString(jo, "gamestage", ExcavationSettings.gamestage));
 			list.add(to);
 		}
 	}
@@ -71,6 +72,7 @@ public final class ToolOverrideHandler
 		jo.addProperty("range", 0);
 		jo.addProperty("exaustion", 0.1F);
 		jo.addProperty("experience", 0);
+		jo.addProperty("gamestage", "");
 		jAry.add(jo);
 		
 		json.add("overrides", jAry);

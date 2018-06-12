@@ -11,6 +11,7 @@
   "credits": "",
   "logoFile": "title.png",
   "screenshots": [],
-  "dependencies": []
+  "useDependencyInformation": true,
+  "dependencies": ["gamestages"]
 }
 ]

@@ -27,7 +27,6 @@ public class ConfigHandler
 		
 		config.load();
 		
-		ExcavationSettings.hideUpdates = config.getBoolean("Hide Updates", Configuration.CATEGORY_GENERAL, false, "Hides update notifications");
 		ExcavationSettings.mineLimit = config.getInt("Limit", Configuration.CATEGORY_GENERAL, 128, 1, Integer.MAX_VALUE, "The maximum number of blocks that can be excavated at once");
 		ExcavationSettings.mineSpeed = config.getInt("Speed", Configuration.CATEGORY_GENERAL, 64, 1, Integer.MAX_VALUE, "How many blocks per tick can be excavated");
 		ExcavationSettings.mineRange = config.getInt("Range", Configuration.CATEGORY_GENERAL, 16, 1, Integer.MAX_VALUE, "How far from the origin an excavation can travel");
@@ -46,6 +45,7 @@ public class ConfigHandler
 		ExcavationSettings.autoPickup = config.getBoolean("Auto Pickup", Configuration.CATEGORY_GENERAL, false, "Skips spawning drops in world adding them directly to your inventory");
 		ExcavationSettings.allowShapes = config.getBoolean("Allow Shapes", Configuration.CATEGORY_GENERAL, true, "Allow players to use shape mining");
 		ExcavationSettings.maxUndos = config.getInt("Max Undos", Configuration.CATEGORY_GENERAL, 0, 0, Integer.MAX_VALUE, "How many excavations should be kept in undo history (may lead to exploits or instability)");
+		ExcavationSettings.gamestage = config.getString("Game Stage", Configuration.CATEGORY_GENERAL, "", "The default game stage required to unlock excavations (requires gamestages to be installed)");
 		
 		String [] tbl = config.getStringList("Tool Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Tools blacklisted from excavating");
 		String [] bbl = config.getStringList("Block Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Blocks blacklisted from being excavated");

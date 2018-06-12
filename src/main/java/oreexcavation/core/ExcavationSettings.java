@@ -5,7 +5,6 @@ package oreexcavation.core;
  */
 public class ExcavationSettings
 {
-	public static boolean hideUpdates = false;
 	public static int mineSpeed = 128;
 	public static int mineLimit = 64;
 	public static int mineRange = 16;
@@ -29,4 +28,7 @@ public class ExcavationSettings
 	public static boolean tpsGuard = true;
 	public static boolean autoPickup = false;
 	public static boolean allowShapes = true;
+	
+	public static boolean gamestagesInstalled = false;
+	public static String gamestage = "";
 }

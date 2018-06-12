@@ -66,4 +66,10 @@ public class ToolOverrideDefault extends ToolOverride
 	{
 		return ExcavationSettings.experience;
 	}
+	
+	@Override
+	public String getGameStage()
+	{
+		return ExcavationSettings.gamestage;
+	}
 }
