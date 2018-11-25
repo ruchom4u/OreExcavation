@@ -25,25 +25,25 @@ public class OreExcavation
     public static final String NAME = "OreExcavation";
     public static final String PROXY = MODID + ".core.proxies";
     public static final String CHANNEL = "OE_CHAN";
-	
-	@Instance(MODID)
-	public static OreExcavation instance;
-	
-	@SidedProxy(clientSide = PROXY + ".ClientProxy", serverSide = PROXY + ".CommonProxy")
-	public static CommonProxy proxy;
-	public SimpleNetworkWrapper network;
-	public static Logger logger;
+    
+    @Instance(MODID)
+    public static OreExcavation instance;
+    
+    @SidedProxy(clientSide = PROXY + ".ClientProxy", serverSide = PROXY + ".CommonProxy")
+    public static CommonProxy proxy;
+    public SimpleNetworkWrapper network;
+    public static Logger logger;
     
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
     {
-    	logger = event.getModLog();
-    	network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
-    	
-    	ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile(), true);
-    	ConfigHandler.initConfigs();
-    	
-    	proxy.registerHandlers();
+        logger = event.getModLog();
+        network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
+        
+        ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile(), true);
+        ConfigHandler.initConfigs();
+        
+        proxy.registerHandlers();
     }
     
     @EventHandler
@@ -60,7 +60,7 @@ public class OreExcavation
     @EventHandler
     public void onServerStart(FMLServerStartingEvent event)
     {
-    	MinecraftServer server = event.getServer();
-    	((ServerCommandManager)server.getCommandManager()).registerCommand(new CommandUndo());
+        MinecraftServer server = event.getServer();
+        ((ServerCommandManager)server.getCommandManager()).registerCommand(new CommandUndo());
     }
 }
