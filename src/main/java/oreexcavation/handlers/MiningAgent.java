@@ -13,6 +13,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
@@ -37,7 +39,9 @@ public class MiningAgent
 {
 	private ItemStack blockStack = null;
 	private Item origTool; // Original tool the player was holding (must be the same to continue)
-	private final List<BlockPos> mined = new ArrayList<>();
+	
+	public final List<BlockPos> minedBlocks = new ArrayList<>();
+	private final List<BlockPos> checkedBlocks = new ArrayList<>();
 	private final ArrayDeque<BlockPos> scheduled = new ArrayDeque<>();
 	public final EntityPlayerMP player;
 	public final BlockPos origin;
@@ -147,14 +151,14 @@ public class MiningAgent
 	 */
 	public boolean tickMiner(Stopwatch timer)
 	{
-		if(origin == null || player == null || !player.isEntityAlive() || mined.size() >= toolProps.getLimit())
+		if(origin == null || player == null || !player.isEntityAlive() || minedBlocks.size() >= toolProps.getLimit())
 		{
 			return true;
 		}
 		
 		for(int n = 0; !scheduled.isEmpty(); n++)
 		{
-			if(n >= toolProps.getSpeed() || mined.size() >= toolProps.getLimit())
+			if(n >= toolProps.getSpeed() || minedBlocks.size() >= toolProps.getLimit())
 			{
 				break;
 			}
@@ -183,7 +187,7 @@ public class MiningAgent
 				continue;
 			} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange())
 			{
-				mined.add(pos);
+				checkedBlocks.add(pos);
 				continue;
 			}
 			
@@ -192,7 +196,7 @@ public class MiningAgent
 			
 			if(EventHandler.isBlockBlacklisted(b, m) || !b.canCollideCheck(m, false))
 			{
-				mined.add(pos);
+				checkedBlocks.add(pos);
 				continue;
 			}
 			
@@ -219,15 +223,23 @@ public class MiningAgent
 			
 			if(flag)
 			{
+                NBTTagCompound tileData = null;
+                
 				if(ExcavationSettings.maxUndos > 0)
 				{
 					player.worldObj.captureBlockSnapshots = true;
 					player.worldObj.capturedBlockSnapshots.clear();
+                    TileEntity tile = player.worldObj.getTileEntity(pos.getX(), pos.getY(), pos.getZ());
+                    if(tile != null)
+                    {
+                        tileData = new NBTTagCompound();
+                        tile.writeToNBT(tileData);
+                    }
 				}
 				
 				if(!(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(player.worldObj, b, m, pos, player)))
 				{
-					mined.add(pos);
+					checkedBlocks.add(pos);
 					continue;
 				} else if(player.theItemInWorldManager.tryHarvestBlock(pos.getX(), pos.getY(), pos.getZ()) || player.worldObj.getBlock(pos.getX(), pos.getY(), pos.getZ()) == Blocks.air)
 				{
@@ -241,8 +253,11 @@ public class MiningAgent
 							BlockSnapshot snap = player.worldObj.capturedBlockSnapshots.get(0);
 							if(pos.equals(new BlockPos(snap.x, snap.y, snap.z)))
 							{
+								history.addRecordedBlock(new BlockHistory(snap, tileData));
+							} else
+                            {
 								history.addRecordedBlock(new BlockHistory(snap));
-							}
+                            }
 							player.worldObj.capturedBlockSnapshots.remove(0);
 							
 							player.worldObj.markAndNotifyBlock(snap.x, snap.y, snap.z, player.worldObj.getChunkFromChunkCoords(snap.x >> 4, snap.y >> 4), snap.getReplacedBlock(), snap.getCurrentBlock(), snap.flag);
@@ -270,6 +285,8 @@ public class MiningAgent
 							}
 						}
 					}
+					
+					minedBlocks.add(pos);
 				} else
 				{
 					OreExcavation.logger.warn("Block harvest failed unexpectedly.\nBlock: " + b + ":" + m + "\nTool: " + heldStack + "\nPos: " + pos.toString());
@@ -278,7 +295,7 @@ public class MiningAgent
 				player.worldObj.capturedBlockSnapshots.clear();
 				player.worldObj.captureBlockSnapshots = false;
 				
-				mined.add(pos);
+				checkedBlocks.add(pos);
 			}
 		}
 		
@@ -287,7 +304,7 @@ public class MiningAgent
 			XPHelper.syncXP(player);
 		}
 		
-		return scheduled.size() <= 0 || mined.size() >= toolProps.getLimit();
+		return scheduled.size() <= 0 || minedBlocks.size() >= toolProps.getLimit();
 	}
 	
 	/**
@@ -295,7 +312,7 @@ public class MiningAgent
 	 */
 	public void appendBlock(BlockPos pos)
 	{
-		if(pos == null || mined.contains(pos) || scheduled.contains(pos))
+		if(pos == null || checkedBlocks.contains(pos) || scheduled.contains(pos))
 		{
 			return;
 		} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange() || !player.canPlayerEdit(pos.getX(), pos.getY(), pos.getZ(), facing.ordinal(), player.getHeldItem()))
@@ -389,7 +406,7 @@ public class MiningAgent
 	
 	public boolean hasMinedPosition(BlockPos pos)
 	{
-		return mined.contains(pos);
+		return checkedBlocks.contains(pos);
 	}
 	
 	public ExcavateHistory getHistory()
