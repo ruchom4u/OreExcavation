@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import cpw.mods.fml.common.gameevent.TickEvent.Phase;
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
@@ -16,9 +18,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.events.EventExcavate.Break;
+import oreexcavation.events.EventExcavate.Pass;
 import oreexcavation.events.IExcavateFilter;
 import oreexcavation.groups.BlockEntry;
 import oreexcavation.groups.BlockGroups;
@@ -35,6 +40,7 @@ import oreexcavation.utils.XPHelper;
 import org.apache.logging.log4j.Level;
 import com.google.common.base.Stopwatch;
 
+@SuppressWarnings("WeakerAccess")
 public class MiningAgent
 {
 	private ItemStack blockStack = null;
@@ -58,10 +64,16 @@ public class MiningAgent
 	public ToolOverride toolProps = ToolOverrideDefault.DEFAULT;
 	
 	private boolean subtypes = true; // Ignore metadata
-	private boolean strictSubs = false; // Disables subtypes and item block equality
+	private boolean strictSubs; // Disables subtypes and item block equality
 	
 	private List<BigItemStack> drops = new ArrayList<>();
 	private int experience = 0;
+    
+    /** Purely for integrations who want to track some sort of data about the excavation.
+     *  For example: tracking resource costs then subtracting that in bulk when done.
+     */
+	@SuppressWarnings("unused")
+    public final NBTTagCompound auxNBT = new NBTTagCompound();
 	
 	public MiningAgent(EntityPlayerMP player, BlockPos origin, Block block, int meta)
 	{
@@ -151,10 +163,7 @@ public class MiningAgent
 	 */
 	public boolean tickMiner(Stopwatch timer)
 	{
-		if(origin == null || player == null || !player.isEntityAlive() || minedBlocks.size() >= toolProps.getLimit())
-		{
-			return true;
-		}
+		if(origin == null || player == null || !player.isEntityAlive() || minedBlocks.size() >= toolProps.getLimit() || MinecraftForge.EVENT_BUS.post(new Pass(this, Phase.START))) return true;
 		
 		for(int n = 0; !scheduled.isEmpty(); n++)
 		{
@@ -287,6 +296,8 @@ public class MiningAgent
 					}
 					
 					minedBlocks.add(pos);
+					
+					MinecraftForge.EVENT_BUS.post(new Break(this, b, m, pos));
 				} else
 				{
 					OreExcavation.logger.warn("Block harvest failed unexpectedly.\nBlock: " + b + ":" + m + "\nTool: " + heldStack + "\nPos: " + pos.toString());
@@ -299,12 +310,9 @@ public class MiningAgent
 			}
 		}
 		
-		if(!player.capabilities.isCreativeMode)
-		{
-			XPHelper.syncXP(player);
-		}
+		if(!player.capabilities.isCreativeMode) XPHelper.syncXP(player);
 		
-		return scheduled.size() <= 0 || minedBlocks.size() >= toolProps.getLimit();
+		return scheduled.size() <= 0 || minedBlocks.size() >= toolProps.getLimit() || MinecraftForge.EVENT_BUS.post(new Pass(this, Phase.END));
 	}
 	
 	/**

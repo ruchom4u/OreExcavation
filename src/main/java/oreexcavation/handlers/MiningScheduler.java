@@ -52,15 +52,17 @@ public class MiningScheduler
 	
 	public void stopMining(EntityPlayerMP player)
 	{
-		MiningAgent a = getActiveAgent(player.getUniqueID());
-		
-		if(a != null)
-		{
-			MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
-			a.dropEverything();
-			agents.remove(a);
-		}
+		stopMining(getActiveAgent(player.getUniqueID()));
 	}
+	
+	public void stopMining(MiningAgent a)
+    {
+        if(a == null) return;
+        
+        MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
+        a.dropEverything();
+        agents.remove(a);
+    }
 	
 	@Deprecated
 	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, Block block, int meta, ExcavateShape shape)
