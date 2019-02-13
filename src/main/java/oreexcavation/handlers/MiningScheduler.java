@@ -22,6 +22,7 @@ import oreexcavation.undo.ExcavateHistory;
 import oreexcavation.undo.RestoreResult;
 import com.google.common.base.Stopwatch;
 
+@SuppressWarnings("WeakerAccess")
 public class MiningScheduler
 {
 	public static final MiningScheduler INSTANCE = new MiningScheduler();
@@ -52,15 +53,17 @@ public class MiningScheduler
 	
 	public void stopMining(EntityPlayerMP player)
 	{
-		MiningAgent a = getActiveAgent(player.getUniqueID());
-		
-		if(a != null)
-		{
-			MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
-			a.dropEverything();
-			agents.remove(a);
-		}
+		stopMining(getActiveAgent(player.getUniqueID()));
 	}
+	
+	public void stopMining(MiningAgent a)
+    {
+        if(a == null) return;
+        
+        MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
+        a.dropEverything();
+        agents.remove(a);
+    }
 	
 	@Deprecated
 	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state, ExcavateShape shape)
