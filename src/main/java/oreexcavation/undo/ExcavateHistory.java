@@ -30,7 +30,7 @@ public class ExcavateHistory
 	
 	public ExcavateHistory(int dimension)
 	{
-		this.timer = Stopwatch.createStarted();
+		this.timer = Stopwatch.createUnstarted();
 		this.dimension = dimension;
 	}
 	
@@ -174,6 +174,8 @@ public class ExcavateHistory
 			entry.restoreBlock(world);
 			iterator.remove();
 		}
+		
+		timer.stop();
 		
 		return history.size() <= 0;
 	}
