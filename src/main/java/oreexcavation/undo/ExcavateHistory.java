@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import com.google.common.base.Stopwatch;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -11,18 +13,18 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.XPHelper;
-import com.google.common.base.Stopwatch;
 
 public class ExcavateHistory
 {
 	private final List<BlockHistory> history = new ArrayList<>();
-	private final List<BigItemStack> stacks = new ArrayList<>();
+	private final NonNullList<BigItemStack> stacks = NonNullList.create();
 	private long experience = 0;
 	
 	private final Stopwatch timer;
@@ -30,7 +32,7 @@ public class ExcavateHistory
 	
 	public ExcavateHistory(int dimension)
 	{
-		this.timer = Stopwatch.createStarted();
+		this.timer = Stopwatch.createUnstarted();
 		this.dimension = dimension;
 	}
 	
@@ -97,6 +99,7 @@ public class ExcavateHistory
 				{
 					for(int n = 0; n < req.length; n++)
 					{
+					    //noinspection EqualsBetweenInconvertibleTypes // BigItemStack deals with this
 						if(stacks.get(n).equals(invoStack))
 						{
 							req[n] += invoStack.getCount();
@@ -147,6 +150,7 @@ public class ExcavateHistory
 				{
 					ItemStack invoStack = player.inventory.getStackInSlot(i);
 					
+					//noinspection EqualsBetweenInconvertibleTypes // BigItemStack deals with this
 					if(!invoStack.isEmpty() && stack.equals(invoStack))
 					{
 						int num = Math.min(stack.stackSize, invoStack.getCount());
@@ -174,6 +178,8 @@ public class ExcavateHistory
 			entry.restoreBlock(world);
 			iterator.remove();
 		}
+		
+		timer.stop();
 		
 		return history.size() <= 0;
 	}
