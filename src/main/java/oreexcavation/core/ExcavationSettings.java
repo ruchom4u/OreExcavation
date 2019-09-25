@@ -11,6 +11,7 @@ public class ExcavationSettings
 	public static float exaustion = 0.1F;
 	public static int experience = 0;
 	public static int maxUndos = 3;
+	public static boolean undoReplace = true;
 	
 	/**
 	 * -1 Disabled, 0 = Keybind, 1 = Sneak, 2 = Always
@@ -31,4 +32,5 @@ public class ExcavationSettings
 	
 	public static boolean gamestagesInstalled = false;
 	public static String gamestage = "";
+	public static String shapeStage = "";
 }

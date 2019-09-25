@@ -62,5 +62,6 @@ public class OreExcavation
     {
         MinecraftServer server = event.getServer();
         ((ServerCommandManager)server.getCommandManager()).registerCommand(new CommandUndo());
+        ((ServerCommandManager)server.getCommandManager()).registerCommand(new CommandUndoForced());
     }
 }

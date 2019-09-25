@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -28,12 +30,18 @@ public class ExcavateHistory
 	
 	private final Stopwatch timer;
 	private final int dimension;
+	private boolean forced = false;
 	
 	public ExcavateHistory(int dimension)
 	{
 		this.timer = Stopwatch.createUnstarted();
 		this.dimension = dimension;
 	}
+	
+	public void setForced(boolean state)
+    {
+        this.forced = state;
+    }
 	
 	/**
 	 * Records the block and tile data associated with this position in the world for later restoration
@@ -81,7 +89,7 @@ public class ExcavateHistory
 	{
 		World world = server.getWorld(dimension);
 		
-		if(!player.capabilities.isCreativeMode)
+		if(!player.capabilities.isCreativeMode && !forced)
 		{
 			if(XPHelper.getPlayerXP(player) < this.experience)
 			{
@@ -118,7 +126,8 @@ public class ExcavateHistory
 		
 		for(BlockHistory hist : history)
 		{
-			if(world.getBlockState(hist.pos).getBlock() != Blocks.AIR)
+		    IBlockState state = world.getBlockState(hist.pos);
+			if(state.getMaterial() == Material.AIR && !(ExcavationSettings.undoReplace && state.getMaterial().isReplaceable()))
 			{
 				return RestoreResult.OBSTRUCTED;
 			} else if(world.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(hist.pos.getX(), hist.pos.getY(), hist.pos.getZ(), hist.pos.getX() + 1F, hist.pos.getY() + 1F, hist.pos.getZ() + 1F)).size() > 0)
@@ -168,13 +177,9 @@ public class ExcavateHistory
 		
 		while(iterator.hasNext())
 		{
-			if(ExcavationSettings.tpsGuard && timer.elapsed(TimeUnit.MILLISECONDS) > 40)
-			{
-				break;
-			}
+			if(ExcavationSettings.tpsGuard && timer.elapsed(TimeUnit.MILLISECONDS) > 40) break;
 			
-			BlockHistory entry = iterator.next();
-			entry.restoreBlock(world);
+			iterator.next().restoreBlock(world);
 			iterator.remove();
 		}
 		

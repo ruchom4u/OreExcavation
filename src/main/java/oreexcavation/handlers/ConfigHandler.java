@@ -2,6 +2,7 @@ package oreexcavation.handlers;
 
 import java.io.File;
 import net.minecraftforge.common.config.Configuration;
+import oreexcavation.client.ExcavationKeys;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.groups.BlockBlacklist;
@@ -45,7 +46,9 @@ public class ConfigHandler
 		ExcavationSettings.autoPickup = config.getBoolean("Auto Pickup", Configuration.CATEGORY_GENERAL, false, "Skips spawning drops in world adding them directly to your inventory");
 		ExcavationSettings.allowShapes = config.getBoolean("Allow Shapes", Configuration.CATEGORY_GENERAL, true, "Allow players to use shape mining");
 		ExcavationSettings.maxUndos = config.getInt("Max Undos", Configuration.CATEGORY_GENERAL, 3, 0, Integer.MAX_VALUE, "How many excavations should be kept in undo history (may lead to exploits or instability)");
+        ExcavationSettings.undoReplace = config.getBoolean("Allow Undo Replacables", Configuration.CATEGORY_GENERAL, true, "Allows the undo command to overwrite replacables like fluids");
 		ExcavationSettings.gamestage = config.getString("Game Stage", Configuration.CATEGORY_GENERAL, "", "The default game stage required to unlock excavations (requires gamestages to be installed)");
+		ExcavationSettings.shapeStage = config.getString("Shape Stage", Configuration.CATEGORY_GENERAL, "", "The default game stage required to unlock shape mining (requires gamestages to be installed)");
 		
 		String [] tbl = config.getStringList("Tool Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Tools blacklisted from excavating");
 		String [] bbl = config.getStringList("Block Blacklist", Configuration.CATEGORY_GENERAL, new String[0], "Blocks blacklisted from being excavated");

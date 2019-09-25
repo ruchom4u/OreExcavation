@@ -62,6 +62,7 @@ public class MiningScheduler
         
         MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
         a.dropEverything();
+        appendHistory(a.getPlayerID(), a.getHistory());
         agents.remove(a);
     }
 	
@@ -106,23 +107,32 @@ public class MiningScheduler
 		return existing;
 	}
 	
+	@Deprecated
 	public RestoreResult attemptUndo(EntityPlayer player)
 	{
-		RestoreResult result;
+	   return attemptUndo(player, false);
+    }
+	
+	public RestoreResult attemptUndo(EntityPlayer player, boolean forced)
+	{
 		List<ExcavateHistory> list = undoHistory.get(player.getUniqueID());
-		list = list != null? list : new ArrayList<>();
+		if(list == null || list.size() <= 0) return RestoreResult.NO_UNDO_HISTORY;
 		
-		if(list.size() <= 0)
-		{
-			return RestoreResult.NO_UNDO_HISTORY;
-		} else
-		{
-			result = list.get(list.size() - 1).canRestore(player.getServer(), player);
-		}
+		int idx = list.size() - 1;
+		RestoreResult result;
+		
+        if(forced)
+        {
+            list.get(idx).setForced(true);
+            result = RestoreResult.SUCCESS;
+        } else
+        {
+            result = list.get(idx).canRestore(player.getServer(), player);
+        }
 		
 		if(result == RestoreResult.SUCCESS)
 		{
-			undoing.put(player.getUniqueID(), list.remove(list.size() - 1));
+			undoing.put(player.getUniqueID(), list.remove(idx));
 		}
 		
 		return result;

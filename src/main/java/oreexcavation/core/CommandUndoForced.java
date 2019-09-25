@@ -5,32 +5,36 @@ import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentTranslation;
 import oreexcavation.handlers.MiningScheduler;
 import oreexcavation.undo.RestoreResult;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 
-public class CommandUndo extends CommandBase
+public class CommandUndoForced extends CommandBase
 {
 	@Nonnull
 	@Override
 	public String getName()
 	{
-		return "undo_excavation";
+		return "undo_excavation_forced";
 	}
 	
 	@Nonnull
 	@Override
 	public String getUsage(@Nonnull ICommandSender sender)
 	{
-		return "/undo_excavation";
+		return "/undo_excavation_forced <player>";
 	}
 	
 	@Override
     public int getRequiredPermissionLevel()
     {
-        return 0;
+        return 4;
     }
 	
 	@Override
@@ -40,9 +44,23 @@ public class CommandUndo extends CommandBase
 	}
 	
 	@Override
+    public boolean isUsernameIndex(String[] args, int index)
+    {
+        return index == 0;
+    }
+    
+    @Nonnull
+    @Override
+    public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, @Nullable BlockPos targetPos)
+    {
+        if(args.length == 1) return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
+        return Collections.emptyList();
+    }
+	
+	@Override
 	public void execute(@Nonnull MinecraftServer server, @Nonnull ICommandSender sender, @Nonnull String[] args) throws CommandException
 	{
-		if(args.length != 0 || !(sender instanceof EntityPlayer))
+		if(args.length != 1 || !(sender instanceof EntityPlayer))
 		{
 			throw new CommandException(getUsage(sender));
 		}
@@ -52,8 +70,8 @@ public class CommandUndo extends CommandBase
 			throw new CommandException("oreexcavation.undo.failed.disabled");
 		}
 		
-		EntityPlayer player = (EntityPlayer)sender;
-		RestoreResult result = MiningScheduler.INSTANCE.attemptUndo(player, false);
+		EntityPlayer player = getPlayer(server, sender, args[0]);
+		RestoreResult result = MiningScheduler.INSTANCE.attemptUndo(player, true);
 		
 		switch(result)
 		{
