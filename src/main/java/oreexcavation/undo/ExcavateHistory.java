@@ -1,26 +1,26 @@
 package oreexcavation.undo;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
+import com.google.common.base.Stopwatch;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.dimension.DimensionType;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.XPHelper;
-import com.google.common.base.Stopwatch;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ExcavateHistory
 {
@@ -30,7 +30,6 @@ public class ExcavateHistory
 	
 	private final Stopwatch timer;
 	private final int dimension;
-	private boolean forced = false;
 	
 	public ExcavateHistory(int dimension)
 	{
@@ -38,24 +37,19 @@ public class ExcavateHistory
 		this.dimension = dimension;
 	}
 	
-	public void setForced(boolean state)
-    {
-        this.forced = state;
-    }
-	
 	/**
 	 * Records the block and tile data associated with this position in the world for later restoration
 	 */
 	public BlockHistory recordPosition(World world, BlockPos pos)
 	{
-		IBlockState state = world.getBlockState(pos);
+		BlockState state = world.getBlockState(pos);
 		TileEntity tile = world.getTileEntity(pos);
-		NBTTagCompound tileData = null;
+		CompoundNBT tileData = null;
 		
 		if(tile != null)
 		{
-			tileData = new NBTTagCompound();
-			tile.writeToNBT(tileData);
+			tileData = new CompoundNBT();
+			tile.write(tileData);
 		}
 		
 		return new BlockHistory(pos, state, tileData);
@@ -85,11 +79,11 @@ public class ExcavateHistory
 		this.experience = xp;
 	}
 	
-	public RestoreResult canRestore(MinecraftServer server, EntityPlayer player)
+	public RestoreResult canRestore(MinecraftServer server, PlayerEntity player)
 	{
-		World world = server.getWorld(dimension);
+		World world = server.getWorld(DimensionType.getById(dimension));
 		
-		if(!player.capabilities.isCreativeMode && !forced)
+		if(!player.abilities.isCreativeMode)
 		{
 			if(XPHelper.getPlayerXP(player) < this.experience)
 			{
@@ -126,8 +120,7 @@ public class ExcavateHistory
 		
 		for(BlockHistory hist : history)
 		{
-		    IBlockState state = world.getBlockState(hist.pos);
-			if(state.getMaterial() == Material.AIR && !(ExcavationSettings.undoReplace && state.getMaterial().isReplaceable()))
+			if(world.getBlockState(hist.pos).getBlock() != Blocks.AIR)
 			{
 				return RestoreResult.OBSTRUCTED;
 			} else if(world.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(hist.pos.getX(), hist.pos.getY(), hist.pos.getZ(), hist.pos.getX() + 1F, hist.pos.getY() + 1F, hist.pos.getZ() + 1F)).size() > 0)
@@ -139,12 +132,12 @@ public class ExcavateHistory
 		return RestoreResult.SUCCESS;
 	}
 	
-	public boolean tickRestore(MinecraftServer server, EntityPlayer player)
+	public boolean tickRestore(MinecraftServer server, PlayerEntity player)
 	{
 		timer.reset();
 		timer.start();
 		
-		if(!player.capabilities.isCreativeMode && stacks.size() > 0)
+		if(!player.abilities.isCreativeMode && stacks.size() > 0)
 		{
 			XPHelper.addXP(player, -this.experience, true);
 			
@@ -173,13 +166,17 @@ public class ExcavateHistory
 		}
 		
 		Iterator<BlockHistory> iterator = history.iterator();
-		World world = server.getWorld(dimension);
+		World world = server.getWorld(DimensionType.getById(dimension));
 		
 		while(iterator.hasNext())
 		{
-			if(ExcavationSettings.tpsGuard && timer.elapsed(TimeUnit.MILLISECONDS) > 40) break;
+			if(ExcavationSettings.tpsGuard && timer.elapsed(TimeUnit.MILLISECONDS) > 40)
+			{
+				break;
+			}
 			
-			iterator.next().restoreBlock(world);
+			BlockHistory entry = iterator.next();
+			entry.restoreBlock(world);
 			iterator.remove();
 		}
 		

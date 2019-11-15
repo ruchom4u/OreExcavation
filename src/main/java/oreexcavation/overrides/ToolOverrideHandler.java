@@ -1,14 +1,14 @@
 package oreexcavation.overrides;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import net.minecraft.item.ItemStack;
-import oreexcavation.core.ExcavationSettings;
-import oreexcavation.utils.JsonHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.item.ItemStack;
+import oreexcavation.core.ExcavationSettings;
+import oreexcavation.utils.JsonHelper;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class ToolOverrideHandler
 {
@@ -66,7 +66,7 @@ public final class ToolOverrideHandler
 		JsonArray jAry = new JsonArray();
 		
 		JsonObject jo = new JsonObject();
-		jo.addProperty("itemID", "examplemod:nerfed_pickaxe:0");
+		jo.addProperty("itemID", "examplemod:nerfed_pickaxe");
 		jo.addProperty("speed", 1);
 		jo.addProperty("limit", 0);
 		jo.addProperty("range", 0);

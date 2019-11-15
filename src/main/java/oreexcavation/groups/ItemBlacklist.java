@@ -1,44 +1,28 @@
 package oreexcavation.groups;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.item.ItemStack;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class ItemBlacklist
 {
 	public static final ItemBlacklist INSTANCE = new ItemBlacklist();
 	
-	private final List<ItemEntry> banList = new ArrayList<>();
-	
-	private ItemBlacklist()
-	{
-	}
+	private final Set<ItemEntry> banList = new HashSet<>();
 	
 	public boolean isBanned(ItemStack stack)
 	{
-		for(ItemEntry entry : banList)
-		{
-			if(entry.checkMatch(stack))
-			{
-				return true;
-			}
-		}
-		
-		return false;
+	    return banList.parallelStream().anyMatch((val) -> val.checkMatch(stack));
 	}
 	
 	public void loadList(String[] list)
 	{
 		banList.clear();
-		
 		for(String s : list)
 		{
 			ItemEntry entry = ItemEntry.readFromString(s);
-			
-			if(entry != null)
-			{
-				banList.add(entry);
-			}
+			if(entry != null) banList.add(entry);
 		}
 	}
 }

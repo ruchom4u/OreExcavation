@@ -1,88 +1,97 @@
 package oreexcavation.groups;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import com.mojang.brigadier.StringReader;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.command.arguments.BlockStateParser;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.StringUtils;
-import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.OreIngredient;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.utils.TagIngredient;
 import org.apache.logging.log4j.Level;
+
+import javax.annotation.Nonnull;
 
 @SuppressWarnings("WeakerAccess")
 public class BlockEntry
 {
+    public final boolean isWildcard;
 	public final ResourceLocation idName;
-	public final OreIngredient oreDict;
-	public final int subType;
+	public final TagIngredient tagIng;
+	public final BlockState state;
 	
-	public BlockEntry(ResourceLocation idName, int subType)
+	public BlockEntry()
+    {
+		this.idName = null;
+		this.tagIng = null;
+		this.state = null;
+		this.isWildcard = true;
+    }
+	
+	public BlockEntry(@Nonnull ResourceLocation idName)
 	{
 		this.idName = idName;
-		this.subType = subType;
-		
-		this.oreDict = null;
+		this.tagIng = null;
+		this.state = null;
+		this.isWildcard = false;
 	}
 	
-	public BlockEntry(String oreDict)
+	public BlockEntry(@Nonnull BlockState blockState)
+    {
+        this.idName = blockState.getBlock().getRegistryName();
+        this.tagIng = null;
+        this.state = blockState;
+		this.isWildcard = false;
+    }
+	
+	public BlockEntry(@Nonnull String tagName)
 	{
-		this.oreDict = StringUtils.isNullOrEmpty(oreDict) ? null : new OreIngredient(oreDict);
-		
+		this.tagIng = StringUtils.isNullOrEmpty(tagName) ? null : new TagIngredient(tagName);
 		this.idName = null;
-		this.subType = -1;
+		this.state = null;
+		this.isWildcard = false;
 	}
 	
-	public boolean checkMatch(IBlockState state)
+	public boolean checkMatch(BlockState blockState)
 	{
-		return state != null && checkMatch(state.getBlock(), state.getBlock().getMetaFromState(state));
-	}
-	
-	public boolean checkMatch(Block block, int metadata)
-	{
-		if(block == null || block == Blocks.AIR)
-		{
-			return false;
-		} else if(idName == null)
-		{
-			return checkOre(block, metadata);
-		}
-		
-		return idName.equals(block.getRegistryName()) && (subType < 0 || subType == OreDictionary.WILDCARD_VALUE || subType == metadata);
-	}
-	
-	private boolean checkOre(Block block, int metadata)
-	{
-	    return oreDict != null && oreDict.apply(new ItemStack(Item.getItemFromBlock(block), 1, metadata));
+	    if(blockState == null || blockState.getBlock() == Blocks.AIR) return false;
+	    if(isWildcard) return true;
+	    if(state != null && state.equals(blockState)) return true;
+	    if(tagIng != null && tagIng.apply(blockState)) return true;
+		return idName != null && idName.equals(blockState.getBlock().getRegistryName());
 	}
 	
 	public static BlockEntry readFromString(String s)
 	{
 		if(s == null || s.length() <= 0) return null;
+		if(s.equalsIgnoreCase("*")) return new BlockEntry();
 		
 		String[] split = s.split(":");
 		
-		if(split.length <= 0 || split.length > 3) // Invalid
+		if(split.length <= 1 || split.length > 3) // Invalid
 		{
+            OreExcavation.logger.log(Level.WARN, "Invalid Block Entry format: " + s);
 			return null;
-		} else if(split.length == 1) // Ore Dictionary
-		{
-			return new BlockEntry(split[0]);
 		} else if(split.length == 2) // Simple ID
 		{
-			return new BlockEntry(new ResourceLocation(split[0], split[1]), -1);
-		} else // ID and Subtype
+			return new BlockEntry(new ResourceLocation(split[0], split[1]));
+		} else if(s.startsWith("tag:"))
 		{
-			try
-			{
-				return new BlockEntry(new ResourceLocation(split[0], split[1]), Integer.parseInt(split[2]));
-			} catch(Exception e)
+		    return new BlockEntry(s.replaceFirst("tag:", ""));
+        } else if(s.startsWith("state:"))// ID and state properties // TODO: Use BlockStateParser to read state properties (need to figure out how to (distinguish between a resource location and a state string)
+		{
+            BlockStateParser parser = new BlockStateParser(new StringReader(s.replaceFirst("state:", "")), false);
+            try
             {
-                OreExcavation.logger.log(Level.ERROR, "Unable to read metadata value for Block Entry \"" + s + "\":", e);
-                return null;
+                parser.parse(false);
+                if(parser.getState() != null) return new BlockEntry(parser.getState());
+            } catch(Exception e)
+            {
+                OreExcavation.logger.log(Level.ERROR, "Unable to parse block state for Block Entry: " + s, e);
             }
 		}
+        
+        OreExcavation.logger.log(Level.WARN, "Invalid Block Entry format: " + s);
+        return null;
 	}
 }

@@ -1,21 +1,22 @@
 package oreexcavation.shapes;
 
-import org.apache.logging.log4j.Level;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
-import oreexcavation.core.OreExcavation;
-import oreexcavation.utils.JsonHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.Direction;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.shapes.VoxelShape;
+import oreexcavation.core.OreExcavation;
+import oreexcavation.utils.JsonHelper;
+import org.apache.logging.log4j.Level;
 
+@SuppressWarnings("WeakerAccess")
 public class ExcavateShape
 {
 	private String name = "New Shape";
@@ -147,7 +148,7 @@ public class ExcavateShape
 	/**
 	 * Origin calculated from center
 	 */
-	public boolean isValid(BlockPos origin, BlockPos offset, EnumFacing facing)
+	public boolean isValid(BlockPos origin, BlockPos offset, Direction facing)
 	{
 		int x = offset.getX() - origin.getX();
 		int y = offset.getY() - origin.getY();
@@ -166,22 +167,22 @@ public class ExcavateShape
 		return (this.shape & mask) == mask;
 	}
 	
-	private BlockPos counterRotate(BlockPos pos, EnumFacing facing)
+	private BlockPos counterRotate(BlockPos pos, Direction facing)
 	{
 		switch(facing)
 		{
 			case DOWN:
-				return rotate(pos, EnumFacing.DOWN);
+				return rotate(pos, Direction.DOWN);
 			case EAST:
-				return rotate(pos, EnumFacing.WEST);
+				return rotate(pos, Direction.WEST);
 			case NORTH:
-				return rotate(pos, EnumFacing.NORTH);
+				return rotate(pos, Direction.NORTH);
 			case SOUTH:
 				return pos;
 			case UP:
-				return rotate(pos, EnumFacing.UP);
+				return rotate(pos, Direction.UP);
 			case WEST:
-				return rotate(pos, EnumFacing.EAST);
+				return rotate(pos, Direction.EAST);
 			default:
 				return pos;
 		}
@@ -197,7 +198,7 @@ public class ExcavateShape
 	
 	/* NORTH (Z-) & EAST (X+)
 	 * SOUTH (Z+) & WEST (X-)*/
-	private BlockPos rotate(BlockPos pos, EnumFacing facing)
+	private BlockPos rotate(BlockPos pos, Direction facing)
 	{
 		switch(facing)
 		{
@@ -221,38 +222,37 @@ public class ExcavateShape
 	public static int posToMask(int x, int y)
 	{
 		int idx = (y * 5) + x;
-		int msk = (int)Math.pow(2, idx);
-		return msk;
+		return (int)Math.pow(2, idx);
 	}
 	
-	public static EnumFacing getFacing(EntityPlayer player, IBlockState state, BlockPos pos)
+	public static Direction getFacing(PlayerEntity player, BlockState state, BlockPos pos)
 	{
-		RayTraceResult rtr;
+		BlockRayTraceResult rtr;
 		
 		try
 		{
-			double d = player.getDistance(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
-			AxisAlignedBB aabb = state.getBoundingBox(player.world, pos);
-			Vec3d v = player.getPositionEyes(1F);
+			double d = Math.sqrt(player.getDistanceSq(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D));
+			VoxelShape aabb = state.getCollisionShape(player.world, pos);
+			Vec3d v = player.getEyePosition(1F);
 			Vec3d v2 = v.add(player.getLookVec().scale(d + 1D));
-			aabb = aabb.offset(pos);
-			rtr = aabb.calculateIntercept(v, v2);
+			aabb = aabb.withOffset(pos.getX(), pos.getY(), pos.getZ());
+			rtr = aabb.rayTrace(v, v2, pos);
 		} catch(Exception e)
 		{
-			OreExcavation.logger.log(Level.INFO, "Unable to excavation direction for player " + player.getName(), e);
+			OreExcavation.logger.log(Level.INFO, "Unable to get excavation direction for player " + player.getName(), e);
 			rtr = null;
 		}
 		
 		if(rtr != null)
 		{
-			return rtr.sideHit.getOpposite();
+			return rtr.getFace().getOpposite();
 		} else
 		{
 			return getFacing(player); // Fallback to player facing direction
 		}
 	}
 	
-	public static EnumFacing getFacing(EntityPlayer player)
+	public static Direction getFacing(PlayerEntity player)
 	{
 		Vec3d dir = player.getLookVec();
 		dir = dir.normalize();
@@ -265,31 +265,31 @@ public class ExcavateShape
 		{
 			if(dir.x > 0)
 			{
-				return EnumFacing.EAST;
+				return Direction.EAST;
 			} else
 			{
-				return EnumFacing.WEST;
+				return Direction.WEST;
 			}
 		} else if(az > ay && az > ax)
 		{
 			if(dir.z > 0)
 			{
-				return EnumFacing.SOUTH;
+				return Direction.SOUTH;
 			} else
 			{
-				return EnumFacing.NORTH;
+				return Direction.NORTH;
 			}
 		} else if(ay > ax && ay > az)
 		{
 			if(dir.y > 0)
 			{
-				return EnumFacing.UP;
+				return Direction.UP;
 			} else
 			{
-				return EnumFacing.DOWN;
+				return Direction.DOWN;
 			}
 		}
 		
-		return EnumFacing.SOUTH;
+		return Direction.SOUTH;
 	}
 }

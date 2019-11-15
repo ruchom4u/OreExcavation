@@ -1,36 +1,38 @@
 package oreexcavation.client;
 
-import java.text.NumberFormat;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiTextField;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 
-@SideOnly(Side.CLIENT)
-public class GuiNumberField extends GuiTextField
+import javax.annotation.Nonnull;
+import java.text.NumberFormat;
+
+@OnlyIn(Dist.CLIENT)
+public class GuiNumberField extends TextFieldWidget
 {
 	public static final String REGEX_NUMBER = "[^.0123456789-]";
 	
 	public GuiNumberField(FontRenderer renderer, int posX, int posY, int sizeX, int sizeY)
 	{
-		super(0, renderer, posX, posY, sizeX, sizeY);
+		super(renderer, posX, posY, sizeX, sizeY, "");
 		this.setMaxStringLength(Integer.MAX_VALUE);
 	}
 	
 	@Override
-	public void writeText(String text)
+	public void writeText(@Nonnull String text)
 	{
 		super.writeText(text.replaceAll(REGEX_NUMBER, "")); // Type new text stripping out illegal characters
 	}
 	
 	@Override
-	public void setText(String text)
+	public void setText(@Nonnull String text)
 	{
 		super.setText(text.replaceAll(REGEX_NUMBER, ""));
 	}
 	
 	@Override
-	public boolean mouseClicked(int mx, int my, int click)
+	public boolean mouseClicked(double mx, double my, int click)
 	{
 		boolean flag = super.mouseClicked(mx, my, click);
 		
@@ -42,7 +44,7 @@ public class GuiNumberField extends GuiTextField
 		}
 		
 		return flag;
-	}
+    }
 	
 	public Number getNumber()
 	{
@@ -55,9 +57,10 @@ public class GuiNumberField extends GuiTextField
 		}
 	}
 	
+	@Nonnull
 	@Override
 	public String getText()
 	{
-		return "" + getNumber();
+		return getNumber().toString();
 	}
 }

@@ -1,112 +1,97 @@
 package oreexcavation.handlers;
 
-import net.darkhax.gamestages.data.GameStageSaveHandler;
-import net.darkhax.gamestages.data.IStageData;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.item.EntityXPOrb;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
+import net.minecraft.entity.item.ExperienceOrbEntity;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.StringUtils;
+import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.StringTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.InputEvent.KeyInputEvent;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
-import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.eventhandler.EventPriority;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.InputEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.eventbus.api.EventPriority;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import oreexcavation.client.ExcavationKeys;
 import oreexcavation.client.GuiEditShapes;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.groups.BlockBlacklist;
-import oreexcavation.groups.BlockGroups;
 import oreexcavation.groups.ItemBlacklist;
 import oreexcavation.network.PacketExcavation;
-import oreexcavation.overrides.ToolOverride;
-import oreexcavation.overrides.ToolOverrideDefault;
-import oreexcavation.overrides.ToolOverrideHandler;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
 import oreexcavation.utils.ToolEffectiveCheck;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class EventHandler
 {
 	public static MiningAgent captureAgent;
 	public static boolean skipNext = false;
 	
 	@SubscribeEvent
-	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent event)
-	{
-		if(event.getModID().equals(OreExcavation.MODID))
-		{
-			ConfigHandler.config.save();
-			ConfigHandler.initConfigs();
-		}
-	}
-	
-	@SubscribeEvent
-	@SideOnly(Side.CLIENT)
-	public void onKeyPressed(InputEvent event)
-	{
-		if(ExcavationKeys.shapeKey.isPressed())
-		{
-			Minecraft mc = Minecraft.getMinecraft();
-			
-			if(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL))
-			{
-				mc.displayGuiScreen(new GuiEditShapes());
-			} else
-			{
-				ShapeRegistry.INSTANCE.toggleShape();
-				
-				ExcavateShape shape = ShapeRegistry.INSTANCE.getActiveShape();
-				
-				if(shape == null)
-				{
-					Minecraft.getMinecraft().player.sendStatusMessage(new TextComponentString("Excavate Shape: NONE"), false);
-				} else
-				{
-					Minecraft.getMinecraft().player.sendStatusMessage(new TextComponentString("Excavate Shape: " + shape.getName()), false);
-				}
-			}
-		}
-	}
+    @OnlyIn(Dist.CLIENT)
+    public static void onKeyEvent(KeyInputEvent event)
+    {
+        Minecraft mc = Minecraft.getInstance();
+        if(mc.currentScreen != null) return;
+        
+        boolean shapeKey = ExcavationKeys.shapeKey.isPressed();
+        boolean editKey = ExcavationKeys.shapeEdit.isPressed();
+        
+        if(editKey || (shapeKey && (event.getModifiers() & GLFW.GLFW_MOD_CONTROL) != 0))
+        {
+            mc.displayGuiScreen(new GuiEditShapes());
+        } else if(shapeKey)
+        {
+            ShapeRegistry.INSTANCE.toggleShape();
+            
+            ExcavateShape shape = ShapeRegistry.INSTANCE.getActiveShape();
+            
+            if(shape == null)
+            {
+                mc.player.sendStatusMessage(new StringTextComponent("Excavate Shape: NONE"), false);
+            } else
+            {
+                mc.player.sendStatusMessage(new StringTextComponent("Excavate Shape: " + shape.getName()), false);
+            }
+        }
+    }
 	
 	@SubscribeEvent(priority=EventPriority.LOWEST)
-	public void onEntitySpawn(EntityJoinWorldEvent event)
+	public static void onEntitySpawn(EntityJoinWorldEvent event)
 	{
-		if(event.getWorld().isRemote || event.getEntity().isDead || event.isCanceled())
+		if(event.getWorld().isRemote || !event.getEntity().isAlive() || event.isCanceled())
 		{
 			return;
 		}
 		
 		if(captureAgent != null)
 		{
-			if(event.getEntity() instanceof EntityItem)
+			if(event.getEntity() instanceof ItemEntity)
 			{
-				EntityItem eItem = (EntityItem)event.getEntity();
+				ItemEntity eItem = (ItemEntity)event.getEntity();
 				ItemStack stack = eItem.getItem();
 				
 				captureAgent.addItemDrop(stack);
 				
 				event.setCanceled(true);
-			} else if(event.getEntity() instanceof EntityXPOrb)
+			} else if(event.getEntity() instanceof ExperienceOrbEntity)
 			{
-				EntityXPOrb orb = (EntityXPOrb)event.getEntity();
+				ExperienceOrbEntity orb = (ExperienceOrbEntity)event.getEntity();
 				
 				captureAgent.addExperience(orb.getXpValue());
 				
@@ -115,10 +100,10 @@ public class EventHandler
 		}
 	}
 	
-	@SubscribeEvent(priority=EventPriority.LOWEST)
-	public void onBlockBreak(BlockEvent.BreakEvent event)
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public static void onBlockBreak(BreakEvent event)
 	{
-		if(event.getWorld().isRemote || event.isCanceled())
+		if(event.getWorld().getWorld().isRemote || event.isCanceled())
 		{
 			return;
 		}
@@ -128,17 +113,17 @@ public class EventHandler
 			return; // Prevent unnecessary checks if an agent was responsible
 		}
 		
-		if(!(event.getPlayer() instanceof EntityPlayerMP) || event.getPlayer() instanceof FakePlayer)
+		if(!(event.getPlayer() instanceof ServerPlayerEntity) || event.getPlayer() instanceof FakePlayer)
 		{
 			return;
 		}
 		
-		EntityPlayerMP player = (EntityPlayerMP)event.getPlayer();
+		ServerPlayerEntity player = (ServerPlayerEntity)event.getPlayer();
 		
-		if(player.getHeldItem(EnumHand.MAIN_HAND).isEmpty() && !ExcavationSettings.openHand)
+		if(player.getHeldItem(Hand.MAIN_HAND).isEmpty() && !ExcavationSettings.openHand)
 		{
 			return;
-		} else if(isToolBlacklisted(player.getHeldItem(EnumHand.MAIN_HAND)))
+		} else if(isToolBlacklisted(player.getHeldItem(Hand.MAIN_HAND)))
 		{
 			return;
 		} else if(isBlockBlacklisted(event.getState()))
@@ -150,10 +135,10 @@ public class EventHandler
 		}
 		
 		BlockPos p = event.getPos();
-		IBlockState s = event.getState();
+		BlockState s = event.getState();
 		
 		// === Game Stages ===
-		if(ExcavationSettings.gamestagesInstalled)
+		/*if(ExcavationSettings.gamestagesInstalled)
 		{
 			IStageData stage = GameStageSaveHandler.getPlayerData(player.getUniqueID());
 			
@@ -174,28 +159,28 @@ public class EventHandler
 					return;
 				}
 			}
-		}
+		}*/
 		
-		if(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(event.getWorld(), s, p, player))
+		if(ExcavationSettings.ignoreTools || ToolEffectiveCheck.canHarvestBlock(event.getWorld().getWorld(), s, p, player))
 		{
 			MiningAgent agent = MiningScheduler.INSTANCE.getActiveAgent(player.getUniqueID());
 			
 			if(agent == null)
 			{
-				NBTTagCompound tag = new NBTTagCompound();
-				tag.setInteger("x", p.getX());
-				tag.setInteger("y", p.getY());
-				tag.setInteger("z", p.getZ());
-				tag.setInteger("stateId", Block.getStateId(s));
-				tag.setInteger("side", ExcavateShape.getFacing(player, s, p).getIndex());
+				CompoundNBT tag = new CompoundNBT();
+				tag.putInt("x", p.getX());
+				tag.putInt("y", p.getY());
+				tag.putInt("z", p.getZ());
+				tag.putInt("stateId", Block.getStateId(s));
+				tag.putInt("side", ExcavateShape.getFacing(player, s, p).getIndex());
 				
-				OreExcavation.instance.network.sendTo(new PacketExcavation(tag), player);
+				OreExcavation.instance.network.sendTo(new PacketExcavation(tag), player.connection.getNetworkManager(), NetworkDirection.PLAY_TO_CLIENT);
 			}
 		}
 	}
 	
 	@SubscribeEvent
-	public void onTick(TickEvent.ServerTickEvent event)
+	public static void onTick(TickEvent.ServerTickEvent event)
 	{
 		if(event.phase != TickEvent.Phase.END)
 		{
@@ -208,7 +193,7 @@ public class EventHandler
 			return;
 		}
 		
-		MiningScheduler.INSTANCE.tickAgents(FMLCommonHandler.instance().getMinecraftServerInstance());
+		MiningScheduler.INSTANCE.tickAgents(ServerLifecycleHooks.getCurrentServer());
 		captureAgent = null;
 	}
 
@@ -216,12 +201,12 @@ public class EventHandler
 	private static int cTick = 0;
 	
 	@SubscribeEvent
-	@SideOnly(Side.CLIENT)
-	public void onClientTick(TickEvent.ClientTickEvent event)
+    @OnlyIn(Dist.CLIENT)
+	public static void onClientTick(TickEvent.ClientTickEvent event)
 	{
 		cTick = (cTick + 1)%10;
 		
-		if(cTick != 0 || Minecraft.getMinecraft().player == null || !isExcavating || !ExcavationSettings.mustHold)
+		if(cTick != 0 || Minecraft.getInstance().player == null || !isExcavating || !ExcavationSettings.mustHold)
 		{
 			return;
 		}
@@ -237,7 +222,7 @@ public class EventHandler
 			{
 				canContinue = false;
 			}
-		} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getMinecraft().player.isSneaking())
+		} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getInstance().player.isSneaking())
 		{
 			canContinue = false;
 		}
@@ -245,16 +230,16 @@ public class EventHandler
 		if(!canContinue)
 		{
 			isExcavating = false;
-			NBTTagCompound tags = new NBTTagCompound();
-			tags.setBoolean("cancel", true);
+			CompoundNBT tags = new CompoundNBT();
+			tags.putBoolean("cancel", true);
 			OreExcavation.instance.network.sendToServer(new PacketExcavation(tags));
 		}
 	}
 	
 	@SubscribeEvent
-	public void onWorldUnload(WorldEvent.Unload event)
+	public static void onWorldUnload(WorldEvent.Unload event)
 	{
-		if(event.getWorld().isRemote || event.getWorld().getMinecraftServer().isServerRunning())
+		if(event.getWorld().getWorld().isRemote || event.getWorld().getWorld().getServer() == null || event.getWorld().getWorld().getServer().isServerRunning())
 		{
 			return;
 		}
@@ -263,7 +248,7 @@ public class EventHandler
 		captureAgent = null;
 	}
 	
-	public static boolean isBlockBlacklisted(IBlockState state)
+	public static boolean isBlockBlacklisted(BlockState state)
 	{
 		if(state == null || state.getBlock() == Blocks.AIR)
 		{

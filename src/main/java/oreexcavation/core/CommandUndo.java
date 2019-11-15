@@ -1,77 +1,57 @@
 package oreexcavation.core;
 
-import net.minecraft.command.CommandBase;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.command.CommandException;
-import net.minecraft.command.ICommandSender;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.command.CommandSource;
+import net.minecraft.command.Commands;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.text.TranslationTextComponent;
 import oreexcavation.handlers.MiningScheduler;
 import oreexcavation.undo.RestoreResult;
 
-import javax.annotation.Nonnull;
-
-public class CommandUndo extends CommandBase
+public class CommandUndo
 {
-	@Nonnull
-	@Override
-	public String getName()
-	{
-		return "undo_excavation";
-	}
-	
-	@Nonnull
-	@Override
-	public String getUsage(@Nonnull ICommandSender sender)
-	{
-		return "/undo_excavation";
-	}
-	
-	@Override
-    public int getRequiredPermissionLevel()
+    public static void register(CommandDispatcher<CommandSource> dispatch)
     {
-        return 0;
+        LiteralArgumentBuilder<CommandSource> argBuilder = Commands.literal("undo_excavation");
+        argBuilder.requires((src) -> src.hasPermissionLevel(0));
+        argBuilder.executes(CommandUndo::execute);
+        dispatch.register(argBuilder);
     }
-	
-	@Override
-	public boolean checkPermission(MinecraftServer server, ICommandSender sender)
-	{
-		return true;
-	}
-	
-	@Override
-	public void execute(@Nonnull MinecraftServer server, @Nonnull ICommandSender sender, @Nonnull String[] args) throws CommandException
-	{
-		if(args.length != 0 || !(sender instanceof EntityPlayer))
-		{
-			throw new CommandException(getUsage(sender));
-		}
+    
+    private static int execute(CommandContext<CommandSource> context) throws CommandSyntaxException
+    {
+		PlayerEntity player = context.getSource().asPlayer();
 		
 		if(ExcavationSettings.maxUndos <= 0)
 		{
-			throw new CommandException("oreexcavation.undo.failed.disabled");
+			throw new CommandException(new TranslationTextComponent("oreexcavation.undo.failed.disabled"));
 		}
 		
-		EntityPlayer player = (EntityPlayer)sender;
-		RestoreResult result = MiningScheduler.INSTANCE.attemptUndo(player, false);
+		RestoreResult result = MiningScheduler.INSTANCE.attemptUndo(player);
 		
 		switch(result)
 		{
 			case INVALID_XP:
-				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.xp"));
+				player.sendMessage(new TranslationTextComponent("oreexcavation.undo.failed.xp"));
 				break;
 			case INVALID_ITEMS:
-				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.items"));
+				player.sendMessage(new TranslationTextComponent("oreexcavation.undo.failed.items"));
 				break;
 			case NO_UNDO_HISTORY:
-				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.no_history"));
+				player.sendMessage(new TranslationTextComponent("oreexcavation.undo.failed.no_history"));
 				break;
 			case OBSTRUCTED:
-				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.failed.obstructed"));
+				player.sendMessage(new TranslationTextComponent("oreexcavation.undo.failed.obstructed"));
 				break;
 			case SUCCESS:
-				sender.sendMessage(new TextComponentTranslation("oreexcavation.undo.success"));
+				player.sendMessage(new TranslationTextComponent("oreexcavation.undo.success"));
 				break;
 		}
+		
+		return 1; // Number of operations/players
 	}
 }

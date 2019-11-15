@@ -1,10 +1,11 @@
 package oreexcavation.handlers;
 
-import java.util.Set;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraftforge.fml.client.IModGuiFactory;
 import oreexcavation.client.GuiOEConfig;
+
+import java.util.Set;
 
 public class ConfigGuiFactory implements IModGuiFactory
 {
@@ -20,7 +21,7 @@ public class ConfigGuiFactory implements IModGuiFactory
 	}
 	
 	@Override
-	public GuiScreen createConfigGui(GuiScreen arg0)
+	public Screen createConfigGui(Screen arg0)
 	{
 		return new GuiOEConfig(arg0);
 	}

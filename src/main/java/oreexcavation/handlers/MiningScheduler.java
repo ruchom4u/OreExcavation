@@ -1,18 +1,11 @@
 package oreexcavation.handlers;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import com.google.common.base.Stopwatch;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import oreexcavation.core.ExcavationSettings;
@@ -20,7 +13,10 @@ import oreexcavation.events.EventExcavate;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.undo.ExcavateHistory;
 import oreexcavation.undo.RestoreResult;
-import com.google.common.base.Stopwatch;
+
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
 public class MiningScheduler
@@ -51,7 +47,7 @@ public class MiningScheduler
 		return null;
 	}
 	
-	public void stopMining(EntityPlayerMP player)
+	public void stopMining(ServerPlayerEntity player)
 	{
 		stopMining(getActiveAgent(player.getUniqueID()));
 	}
@@ -62,23 +58,22 @@ public class MiningScheduler
         
         MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
         a.dropEverything();
-        appendHistory(a.getPlayerID(), a.getHistory());
         agents.remove(a);
     }
 	
 	@Deprecated
-	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state, ExcavateShape shape)
+	public MiningAgent startMining(ServerPlayerEntity player, BlockPos pos, BlockState state, ExcavateShape shape)
 	{
 		return startMining(player, pos, state, shape, ExcavateShape.getFacing(player));
 	}
 	
 	@Deprecated
-	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state)
+	public MiningAgent startMining(ServerPlayerEntity player, BlockPos pos, BlockState state)
 	{
-		return startMining(player, pos, state, null, EnumFacing.NORTH);
+		return startMining(player, pos, state, null, Direction.NORTH);
 	}
 	
-	public MiningAgent startMining(EntityPlayerMP player, BlockPos pos, IBlockState state, ExcavateShape shape, EnumFacing dir)
+	public MiningAgent startMining(ServerPlayerEntity player, BlockPos pos, BlockState state, ExcavateShape shape, Direction dir)
 	{
 		MiningAgent existing = getActiveAgent(player.getUniqueID());
 		
@@ -107,32 +102,23 @@ public class MiningScheduler
 		return existing;
 	}
 	
-	@Deprecated
-	public RestoreResult attemptUndo(EntityPlayer player)
+	public RestoreResult attemptUndo(PlayerEntity player)
 	{
-	   return attemptUndo(player, false);
-    }
-	
-	public RestoreResult attemptUndo(EntityPlayer player, boolean forced)
-	{
-		List<ExcavateHistory> list = undoHistory.get(player.getUniqueID());
-		if(list == null || list.size() <= 0) return RestoreResult.NO_UNDO_HISTORY;
-		
-		int idx = list.size() - 1;
 		RestoreResult result;
+		List<ExcavateHistory> list = undoHistory.get(player.getUniqueID());
+		list = list != null? list : new ArrayList<>();
 		
-        if(forced)
-        {
-            list.get(idx).setForced(true);
-            result = RestoreResult.SUCCESS;
-        } else
-        {
-            result = list.get(idx).canRestore(player.getServer(), player);
-        }
+		if(list.size() <= 0)
+		{
+			return RestoreResult.NO_UNDO_HISTORY;
+		} else
+		{
+			result = list.get(list.size() - 1).canRestore(player.getServer(), player);
+		}
 		
 		if(result == RestoreResult.SUCCESS)
 		{
-			undoing.put(player.getUniqueID(), list.remove(idx));
+			undoing.put(player.getUniqueID(), list.remove(list.size() - 1));
 		}
 		
 		return result;

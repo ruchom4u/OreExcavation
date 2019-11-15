@@ -1,12 +1,13 @@
 package oreexcavation.shapes;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import oreexcavation.utils.JsonHelper;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import oreexcavation.utils.JsonHelper;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ShapeRegistry
 {

@@ -1,35 +1,26 @@
 package oreexcavation.handlers;
 
-import java.lang.reflect.Method;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import net.darkhax.gamestages.data.GameStageSaveHandler;
-import net.darkhax.gamestages.data.IStageData;
+import com.google.common.base.Stopwatch;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.item.EntityXPOrb;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.Blocks;
+import net.minecraft.entity.item.ExperienceOrbEntity;
+import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.CachedBlockInfo;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.StringUtils;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.Phase;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.events.EventExcavate.Break;
@@ -46,34 +37,34 @@ import oreexcavation.undo.ExcavateHistory;
 import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.ToolEffectiveCheck;
 import oreexcavation.utils.XPHelper;
-import org.apache.logging.log4j.Level;
-import com.google.common.base.Stopwatch;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
 public class MiningAgent
 {
-	private ItemStack blockStack = null;
 	private Item origTool;
 	
 	public final List<BlockPos> minedBlocks = new ArrayList<>();
 	private final List<BlockPos> checkedBlocks = new ArrayList<>();
 	private final ArrayDeque<BlockPos> scheduled = new ArrayDeque<>();
-	public final EntityPlayerMP player;
+	public final ServerPlayerEntity player;
 	public final BlockPos origin;
 	public final UUID playerID;
-	public EnumFacing facing = EnumFacing.SOUTH;
+	public Direction facing = Direction.SOUTH;
 	public ExcavateShape shape = null;
 	private final ExcavateHistory history;
 	
 	public final List<BlockEntry> blockGroup = new ArrayList<>();
 	private final List<IExcavateFilter> filters = new ArrayList<>();
-	public final IBlockState state;
+	public final BlockState state;
 	private final Block block;
-	private final int meta;
 	
 	public ToolOverride toolProps = ToolOverrideDefault.DEFAULT;
-	
-	private boolean subtypes = true; // Ignore metadata
 	private boolean strictSubs; // Disables subtypes and item block equality
 	
 	public final NonNullList<BigItemStack> drops = NonNullList.create();
@@ -83,9 +74,9 @@ public class MiningAgent
      *  For example: tracking resource costs then subtracting that in bulk when done.
      */
 	@SuppressWarnings("unused")
-    public final NBTTagCompound auxNBT = new NBTTagCompound();
+    public final CompoundNBT auxNBT = new CompoundNBT();
 	
-	public MiningAgent(EntityPlayerMP player, BlockPos origin, IBlockState state)
+	public MiningAgent(ServerPlayerEntity player, BlockPos origin, BlockState state)
 	{
 		this.player = player;
 		this.origin = origin;
@@ -93,13 +84,12 @@ public class MiningAgent
 		
 		this.state = state;
 		this.block = state.getBlock();
-		this.meta = block.getMetaFromState(state);
 		
-		this.history = new ExcavateHistory(player.world.provider.getDimension());
+		this.history = new ExcavateHistory(player.world.getDimension().getType().getId());
 		this.blockGroup.addAll(BlockGroups.INSTANCE.getGroup(state));
 		this.strictSubs = BlockGroups.INSTANCE.isStrict(state);
 		
-		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack held = player.getHeldItem(Hand.MAIN_HAND);
 		origTool = held.isEmpty()? null : held.getItem();
 		
 		if(!held.isEmpty())
@@ -126,30 +116,6 @@ public class MiningAgent
 	
 	public void init()
 	{
-		if(m_createStack != null)
-		{
-			try
-			{
-				blockStack = (ItemStack)m_createStack.invoke(block, state);
-				
-				if(blockStack == null || blockStack.isEmpty())
-				{
-					blockStack = null;
-				}
-			} catch(Exception e)
-			{
-				blockStack = null;
-			}
-		}
-		
-		if(!strictSubs)
-		{
-			this.subtypes = blockStack == null || !blockStack.getHasSubtypes();
-		} else
-		{
-			this.subtypes = false;
-		}
-		
 		for(int i = -1; i <= 1; i++)
 		{
 			for(int j = -1; j <= 1; j++)
@@ -162,7 +128,7 @@ public class MiningAgent
 		}
 	}
 	
-	public MiningAgent setShape(ExcavateShape shape, EnumFacing facing)
+	public MiningAgent setShape(ExcavateShape shape, Direction facing)
 	{
 		this.shape = shape;
 		this.facing = facing;
@@ -174,7 +140,7 @@ public class MiningAgent
 	 */
 	public boolean tickMiner(Stopwatch timer)
 	{
-		if(origin == null || player == null || !player.isEntityAlive() || minedBlocks.size() >= toolProps.getLimit() || MinecraftForge.EVENT_BUS.post(new Pass(this, Phase.START))) return true;
+		if(origin == null || player == null || !player.isAlive() || minedBlocks.size() >= toolProps.getLimit() || MinecraftForge.EVENT_BUS.post(new Pass(this, Phase.START))) return true;
 		
 		for(int n = 0; !scheduled.isEmpty(); n++)
 		{
@@ -188,7 +154,7 @@ public class MiningAgent
 				break;
 			}
 			
-			ItemStack heldStack = player.getHeldItem(EnumHand.MAIN_HAND);
+			ItemStack heldStack = player.getHeldItem(Hand.MAIN_HAND);
 			Item heldItem = heldStack.isEmpty()? null : heldStack.getItem();
 			
 			if(heldItem != origTool)
@@ -205,45 +171,26 @@ public class MiningAgent
 			if(pos == null)
 			{
 				continue;
-			} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange())
+			} else if(player.getDistanceSq(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange() * toolProps.getRange())
 			{
 				checkedBlocks.add(pos);
 				continue;
 			}
 			
-			IBlockState s = player.world.getBlockState(pos);
+			BlockState s = player.world.getBlockState(pos);
 			Block b = s.getBlock();
-			int m = b.getMetaFromState(s);
 			
-			if(EventHandler.isBlockBlacklisted(s) || !b.canCollideCheck(s, false))
+			if(EventHandler.isBlockBlacklisted(s) || s.getMaterial() == Material.FIRE)
 			{
 				checkedBlocks.add(pos);
 				continue;
 			}
 			
-			boolean flag = b == block && (subtypes || m == meta);
+			boolean flag = strictSubs ? s == state : b == block;
 			flag = flag || BlockGroups.INSTANCE.quickCheck(blockGroup, s);
 			
-			if(!flag && blockStack != null && !strictSubs)
-			{
-				ItemStack stack;
-				
-				try
-				{
-					stack = (ItemStack)m_createStack.invoke(b, s);
-				} catch(Exception e)
-				{
-					stack = null;
-				}
-				
-				if(stack != null && !stack.isEmpty() && stack.getItem() == blockStack.getItem() && stack.getItemDamage() == blockStack.getItemDamage())
-				{
-					flag = true;
-				}
-			}
-			
 			// === Game Stages ===
-			if(ExcavationSettings.gamestagesInstalled)
+			/*if(ExcavationSettings.gamestagesInstalled)
 			{
 				IStageData stage = GameStageSaveHandler.getPlayerData(player.getUniqueID());
 			
@@ -257,18 +204,18 @@ public class MiningAgent
 						continue;
 					}
 				}
-			}
+			}*/
 			
 			if(flag)
 			{
-                NBTTagCompound tileData = null;
+                CompoundNBT tileData = null;
                 
 				if(ExcavationSettings.maxUndos > 0)
 				{
 					player.world.captureBlockSnapshots = true;
 					player.world.capturedBlockSnapshots.clear();
                     TileEntity tile = player.world.getTileEntity(pos);
-                    if(tile != null) tileData = tile.writeToNBT(new NBTTagCompound());
+                    if(tile != null) tileData = tile.write(new CompoundNBT());
 				}
 				
 				if(!ExcavationSettings.ignoreTools && !ToolEffectiveCheck.canHarvestBlock(player.world, s, pos, player))
@@ -348,7 +295,7 @@ public class MiningAgent
 		if(pos == null || checkedBlocks.contains(pos) || scheduled.contains(pos))
 		{
 			return;
-		} else if(player.getDistance(pos.getX(), pos.getY(), pos.getZ()) > toolProps.getRange() || !player.world.getWorldBorder().contains(pos) || !canDestroy(player, pos))
+		} else if(Math.sqrt(player.getDistanceSq(pos.getX(), pos.getY(), pos.getZ())) > toolProps.getRange() || !player.world.getWorldBorder().contains(pos) || !canDestroy(player, pos))
 		{
 			return;
 		} else if(shape != null && !shape.isValid(origin, pos, facing))
@@ -367,20 +314,20 @@ public class MiningAgent
 		scheduled.add(pos);
 	}
 	
-	private boolean canDestroy(EntityPlayer player, BlockPos pos)
+	private boolean canDestroy(PlayerEntity player, BlockPos pos)
 	{
-		if(player.capabilities.allowEdit)
+		if(player.abilities.allowEdit)
 		{
 			return true;
 		}
 		
-		IBlockState state = player.world.getBlockState(pos);
+		BlockState state = player.world.getBlockState(pos);
 		ItemStack held = player.getHeldItemMainhand();
 		
-		return !held.isEmpty() && state.getBlock() != Blocks.AIR && held.canDestroy(state.getBlock());
+		return !held.isEmpty() && state.getBlock() != Blocks.AIR && held.canDestroy(player.world.getTags(), new CachedBlockInfo(player.world, pos, false));
 	}
 	
-	private boolean hasEnergy(EntityPlayerMP player)
+	private boolean hasEnergy(ServerPlayerEntity player)
 	{
 		return (toolProps.getExaustion() <= 0 || player.getFoodStats().getFoodLevel() > 0) && (toolProps.getExperience() <= 0 || XPHelper.getPlayerXP(player) >= toolProps.getExperience());
 	}
@@ -400,29 +347,29 @@ public class MiningAgent
 			{
 				if(!ExcavationSettings.autoPickup)
 				{
-					EntityItem eItem = new EntityItem(this.player.world, origin.getX() + 0.5D, origin.getY() + 0.5D, origin.getZ() + 0.5D, stack);
-					this.player.world.spawnEntity(eItem);
+					ItemEntity eItem = new ItemEntity(this.player.world, origin.getX() + 0.5D, origin.getY() + 0.5D, origin.getZ() + 0.5D, stack);
+					this.player.world.addEntity(eItem);
 				} else
 				{
-					EntityItem eItem = new EntityItem(this.player.world, player.posX, player.posY, player.posZ, stack);
-					this.player.world.spawnEntity(eItem);
+					ItemEntity eItem = new ItemEntity(this.player.world, player.posX, player.posY, player.posZ, stack);
+					this.player.world.addEntity(eItem);
 				}
 			}
 		}
 		
 		if(this.experience > 0)
 		{
-			EntityXPOrb orb;
+			ExperienceOrbEntity orb;
 			
 			if(ExcavationSettings.autoPickup)
 			{
-				orb = new EntityXPOrb(this.player.world, player.posX, player.posY, player.posZ, experience);
+				orb = new ExperienceOrbEntity(this.player.world, player.posX, player.posY, player.posZ, experience);
 			} else
 			{
-				orb = new EntityXPOrb(this.player.world, origin.getX(), origin.getY(), origin.getZ(), experience);
+				orb = new ExperienceOrbEntity(this.player.world, origin.getX(), origin.getY(), origin.getZ(), experience);
 			}
 			
-			this.player.world.spawnEntity(orb);
+			this.player.world.addEntity(orb);
 		}
 		
 		drops.clear();
@@ -458,26 +405,5 @@ public class MiningAgent
 	public ExcavateHistory getHistory()
 	{
 		return history;
-	}
-	
-	private static Method m_createStack = null;
-	
-	static
-	{
-		try
-		{
-			m_createStack = Block.class.getDeclaredMethod("func_180643_i", IBlockState.class);
-			m_createStack.setAccessible(true);
-		} catch(Exception e1)
-		{
-			try
-			{
-				m_createStack = Block.class.getDeclaredMethod("getSilkTouchDrop", IBlockState.class);
-				m_createStack.setAccessible(true);
-			} catch(Exception e2)
-			{
-				OreExcavation.logger.log(Level.INFO, "Unable to use block hooks for excavation", e2);
-			}
-		}
 	}
 }

@@ -1,21 +1,21 @@
 package oreexcavation.client;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.IOException;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.texture.TextureMap;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.renderer.texture.AtlasTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.StringTextComponent;
 import oreexcavation.core.OreExcavation;
 import oreexcavation.shapes.ExcavateShape;
 import oreexcavation.shapes.ShapeRegistry;
-import org.lwjgl.input.Keyboard;
 
-public class GuiEditShapes extends GuiScreen
+import java.io.File;
+
+public class GuiEditShapes extends Screen
 {
 	private static final ResourceLocation GUI_TEX = new ResourceLocation(OreExcavation.MODID, "textures/gui/edit_shapes.png");
 	private static final ResourceLocation GUI_ICO = new ResourceLocation("minecraft:textures/gui/icons.png");
@@ -26,63 +26,74 @@ public class GuiEditShapes extends GuiScreen
 	private int idx = 0;
 	private ExcavateShape curShape = null;
 	
-	private GuiTextField txtField = null;
+	private TextFieldWidget txtField = null;
 	private GuiNumberField nmbField = null;
 	
-	private GuiButton btnLeft = null;
-	private GuiButton btnRight = null;
-	private GuiButton btnAdd = null;
-	private GuiButton btnRemove = null;
+	private Button btnLeft = null;
+	private Button btnRight = null;
+	private Button btnAdd = null;
+	private Button btnRemove = null;
 	
 	public GuiEditShapes()
 	{
+	    super(new StringTextComponent("Edit Shapes"));
 	}
 	
 	@Override
-	public void initGui()
+    public void tick()
+    {
+        txtField.tick();
+        nmbField.tick();
+    }
+	
+	@Override
+	public void init()
 	{
 		this.guiLeft = this.width/2 - 128;
 		this.guiTop = this.height/2 - 128;
 		
-		Keyboard.enableRepeatEvents(true);
+		this.minecraft.keyboardListener.enableRepeatEvents(true);
 		
-		btnLeft = new GuiButton(0, guiLeft + 14, guiTop + 118, 20, 20, "<");
-		btnLeft.enabled = idx > 0;
+		btnLeft = new Button(guiLeft + 14, guiTop + 118, 20, 20, "<", (btn) -> this.actionPerformed(0));
+		btnLeft.active = idx > 0;
 		
-		btnRight = new GuiButton(1, guiLeft + 222, guiTop + 118, 20, 20, ">");
-		btnRight.enabled = idx + 1 < ShapeRegistry.INSTANCE.getShapeList().size();
+		btnRight = new Button(guiLeft + 222, guiTop + 118, 20, 20, ">", (btn) -> this.actionPerformed(1));
+		btnRight.active = idx + 1 < ShapeRegistry.INSTANCE.getShapeList().size();
 		
-		btnAdd = new GuiButton(2, guiLeft + 150, guiTop + 222, 20, 20, "+");
-		btnAdd.packedFGColour = Color.GREEN.getRGB();
+		btnAdd = new Button(guiLeft + 150, guiTop + 222, 20, 20, "+", (btn) -> this.actionPerformed(2));
+		//btnAdd.packedFGColor = Color.GREEN.getRGB();
 		
-		btnRemove = new GuiButton(3, guiLeft + 86, guiTop + 222, 20, 20, "-");
-		btnRemove.packedFGColour = Color.RED.getRGB();
+		btnRemove = new Button(guiLeft + 86, guiTop + 222, 20, 20, "-", (btn) -> this.actionPerformed(3));
+		//btnRemove.packedFGColor = Color.RED.getRGB();
 		
-		txtField = new GuiTextField(0, mc.fontRenderer, guiLeft + 48, guiTop + 16, 112, 16);
-		nmbField = new GuiNumberField(mc.fontRenderer, guiLeft + 176, guiTop + 16, 32, 16);
+		txtField = new TextFieldWidget(minecraft.fontRenderer, guiLeft + 48, guiTop + 16, 112, 16, "");
+		nmbField = new GuiNumberField(minecraft.fontRenderer, guiLeft + 176, guiTop + 16, 32, 16);
 		
-		this.buttonList.add(btnLeft);
-		this.buttonList.add(btnRight);
-		this.buttonList.add(btnAdd);
-		this.buttonList.add(btnRemove);
+		this.children.add(txtField);
+		this.children.add(nmbField);
+		
+		this.addButton(btnLeft);
+		this.addButton(btnRight);
+		this.addButton(btnAdd);
+		this.addButton(btnRemove);
 		
 		refreshShape();
 	}
 	
 	@Override
-	public void drawScreen(int mx, int my, float partialTick)
+	public void render(int mx, int my, float partialTick)
 	{
-		this.drawDefaultBackground();
+		this.renderBackground();
 		
-		mc.renderEngine.bindTexture(GUI_TEX);
-		this.drawTexturedModalRect(guiLeft, guiTop, 0, 0, 256, 256);
+		minecraft.getTextureManager().bindTexture(GUI_TEX);
+		blit(guiLeft, guiTop, 0, 0, 256, 256);
 		
-		txtField.drawTextBox();
-		nmbField.drawTextBox();
+		txtField.render(mx, my, partialTick);
+		nmbField.render(mx, my, partialTick);
 		
-		super.drawScreen(mx, my, partialTick);
+		super.render(mx, my, partialTick);
 		
-		GlStateManager.color(1F, 1F, 1F, 1F);
+		GlStateManager.color4f(1F, 1F, 1F, 1F);
 		
 		if(curShape != null)
 		{
@@ -97,25 +108,26 @@ public class GuiEditShapes extends GuiScreen
 					
 					if((mask & flag) != flag)
 					{
-						mc.renderEngine.bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+						minecraft.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 						
 						// Draw stone scaled x2
 						GlStateManager.pushMatrix();
-						GlStateManager.translate(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
-						GlStateManager.scale(2F, 2F, 1F);
-						this.drawTexturedModalRect(0, 0,  mc.getTextureMapBlocks().getAtlasSprite("minecraft:blocks/stone"), 16, 16);
+						GlStateManager.translatef(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
+						GlStateManager.scalef(2F, 2F, 1F);
+                        TextureAtlasSprite spr = minecraft.getTextureMap().getAtlasSprite("minecraft:block/stone");
+						blit(0, 0, 0, 16, 16, spr);
 						GlStateManager.popMatrix();
 					}
 					
 					if(off == (y * 5) + x)
 					{
-						mc.renderEngine.bindTexture(GUI_ICO);
+						minecraft.getTextureManager().bindTexture(GUI_ICO);
 						
 						// Draw reticle scaled x2
 						GlStateManager.pushMatrix();
-						GlStateManager.translate(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
-						GlStateManager.scale(2F, 2F, 1F);
-						this.drawTexturedModalRect(0, 0, 0, 0, 16, 16);
+						GlStateManager.translatef(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
+						GlStateManager.scalef(2F, 2F, 1F);
+						blit(0, 0, 0, 0, 16, 16);
 						GlStateManager.popMatrix();
 					}
 				}
@@ -124,11 +136,12 @@ public class GuiEditShapes extends GuiScreen
 	}
 	
 	@Override
-	public void onGuiClosed()
+	public void onClose()
 	{
 		ShapeRegistry.INSTANCE.saveShapes(new File("config/oreexcavation_shapes.json"));
 		
-		Keyboard.enableRepeatEvents(false);
+		this.minecraft.keyboardListener.enableRepeatEvents(false);
+		super.onClose();
 	}
 	
 	public void refreshShape()
@@ -147,30 +160,29 @@ public class GuiEditShapes extends GuiScreen
 		{
 			txtField.setText(curShape.getName());
 			nmbField.setText("" + curShape.getMaxDepth());
-			btnRemove.enabled = true;
+			btnRemove.active = true;
 		} else
 		{
 			txtField.setText("");
 			nmbField.setText("-1");
-			btnRemove.enabled = false;
+			btnRemove.active = false;
 		}
 		
-		btnLeft.enabled = idx > 0;
-		btnRight.enabled = idx + 1 < ShapeRegistry.INSTANCE.getShapeList().size();
+		btnLeft.active = idx > 0;
+		btnRight.active = idx + 1 < ShapeRegistry.INSTANCE.getShapeList().size();
 	}
 	
-	@Override
-	public void actionPerformed(GuiButton button)
+	private void actionPerformed(int id)
 	{
-		if(button.id == 0 && idx > 0)
+		if(id == 0 && idx > 0)
 		{
 			idx--;
 			refreshShape();
-		} else if(button.id == 1 && idx + 1 < ShapeRegistry.INSTANCE.getShapeList().size())
+		} else if(id == 1 && idx + 1 < ShapeRegistry.INSTANCE.getShapeList().size())
 		{
 			idx++;
 			refreshShape();
-		} else if(button.id == 2)
+		} else if(id == 2)
 		{
 			idx = ShapeRegistry.INSTANCE.getShapeList().size();
 			ExcavateShape nes = new ExcavateShape();
@@ -185,7 +197,7 @@ public class GuiEditShapes extends GuiScreen
 			
 			ShapeRegistry.INSTANCE.getShapeList().add(nes);
 			refreshShape();
-		} else if(button.id == 3 && curShape != null)
+		} else if(id == 3 && curShape != null)
 		{
 			ShapeRegistry.INSTANCE.getShapeList().remove(curShape);
 			refreshShape();
@@ -193,30 +205,32 @@ public class GuiEditShapes extends GuiScreen
 	}
 	
 	@Override
-	public void keyTyped(char c, int keycode) throws IOException
-	{
-		super.keyTyped(c, keycode);
+	public boolean keyPressed(int k1, int k2, int k3)
+    {
+		boolean flag = super.keyPressed(k1, k2, k3);
 		
-		txtField.textboxKeyTyped(c, keycode);
-		nmbField.textboxKeyTyped(c, keycode);
+		//txtField.keyPressed(k1, k2, k3);
+		//nmbField.keyPressed(k1, k2, k3);
 		
 		if(curShape != null)
 		{
 			curShape.setName(txtField.getText());
 			curShape.setMaxDepth(nmbField.getNumber().intValue());
 		}
+		
+		return flag;
 	}
 	
 	@Override
-	public void mouseClicked(int mx, int my, int click) throws IOException
+	public boolean mouseClicked(double mx, double my, int click)
 	{
-		super.mouseClicked(mx, my, click);
+		boolean used = super.mouseClicked(mx, my, click);
 		
-		txtField.mouseClicked(mx, my, click);
-		nmbField.mouseClicked(mx, my, click);
+		//txtField.mouseClicked(mx, my, click);
+		//nmbField.mouseClicked(mx, my, click);
 		
-		int x = (mx - guiLeft - 48)/32;
-		int y = (my - guiTop - 48)/32;
+		int x = (int)Math.floor((mx - guiLeft - 48)/32D);
+		int y = (int)Math.floor((my - guiTop - 48)/32D);
 		
 		if(curShape != null && mx - guiLeft >= 48 && x < 5 && my - guiTop >= 48 && y < 5)
 		{
@@ -230,5 +244,13 @@ public class GuiEditShapes extends GuiScreen
 				curShape.setReticle(4 - x, 4 - y);
 			}
 		}
+		
+		return used;
 	}
+	
+	@Override
+    public boolean isPauseScreen()
+    {
+      return false;
+    }
 }

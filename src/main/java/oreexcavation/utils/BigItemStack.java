@@ -1,11 +1,12 @@
 package oreexcavation.utils;
 
-import java.util.ArrayList;
-import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Purpose built container class for holding ItemStacks larger than 127. <br>
@@ -14,8 +15,7 @@ import net.minecraft.nbt.NBTTagCompound;
 public class BigItemStack
 {
 	public int stackSize = 0;
-	public String oreDict = "";
-	private ItemStack baseStack; // Ensures that this base stack is never null
+	private final ItemStack baseStack; // Ensures that this base stack is never null
 	
 	public BigItemStack(ItemStack stack)
 	{
@@ -31,12 +31,7 @@ public class BigItemStack
 	
 	public BigItemStack(Block block, int amount)
 	{
-		this(block, amount, 0);
-	}
-	
-	public BigItemStack(Block block, int amount, int damage)
-	{
-		this(Item.getItemFromBlock(block), amount, damage);
+		this(block.asItem(), amount);
 	}
 	
 	public BigItemStack(Item item)
@@ -46,12 +41,7 @@ public class BigItemStack
 	
 	public BigItemStack(Item item, int amount)
 	{
-		this(item, amount, 0);
-	}
-	
-	public BigItemStack(Item item, int amount, int damage)
-	{
-		baseStack = new ItemStack(item, 1, damage);
+		baseStack = new ItemStack(item, 1);
 		this.stackSize = amount;
 	}
 	
@@ -66,17 +56,17 @@ public class BigItemStack
 	/**
 	 * Shortcut method to the NBTTagCompound in the base ItemStack
 	 */
-	public NBTTagCompound GetTagCompound()
+	public CompoundNBT GetTagCompound()
 	{
-		return baseStack.getTagCompound();
+		return baseStack.getTag();
 	}
 	
 	/**
 	 * Shortcut method to the NBTTagCompound in the base ItemStack
 	 */
-	public void SetTagCompound(NBTTagCompound tags)
+	public void SetTagCompound(CompoundNBT tags)
 	{
-		baseStack.setTagCompound(tags);
+		baseStack.setTag(tags);
 	}
 	
 	/**
@@ -84,7 +74,7 @@ public class BigItemStack
 	 */
 	public boolean HasTagCompound()
 	{
-		return baseStack.hasTagCompound();
+		return baseStack.hasTag();
 	}
 	
 	/**
@@ -111,7 +101,6 @@ public class BigItemStack
 	{
 		BigItemStack stack = new BigItemStack(baseStack.copy());
 		stack.stackSize = this.stackSize;
-		stack.oreDict = this.oreDict;
 		return stack;
 	}
 	
@@ -127,29 +116,22 @@ public class BigItemStack
 		}
 	}
 	
-	public static BigItemStack loadItemStackFromNBT(NBTTagCompound tags)
+	public BigItemStack(CompoundNBT tags)
 	{
-		int count = tags.getInteger("Count");
-		String dict = tags.getString("OreDict");
-		ItemStack miniStack = new ItemStack(tags);
-		BigItemStack bigStack = new BigItemStack(miniStack);
-		bigStack.stackSize = count;
-		bigStack.oreDict = dict;
-		return bigStack;
+		CompoundNBT itemNBT = tags.copy();
+		itemNBT.putInt("Count", 1);
+		if(tags.contains("id", 99))
+        {
+            itemNBT.putString("id", "" + tags.getShort("id"));
+        }
+		this.stackSize = tags.getInt("Count");
+        this.baseStack = ItemStack.read(itemNBT); // Minecraft does the ID conversions for me
 	}
 	
-	public void readFromNBT(NBTTagCompound tags)
+	public CompoundNBT writeToNBT(CompoundNBT tags)
 	{
-		stackSize = tags.getInteger("Count");
-		oreDict = tags.getString("OreDict");
-		baseStack = new ItemStack(tags);
-	}
-	
-	public NBTTagCompound writeToNBT(NBTTagCompound tags)
-	{
-		baseStack.writeToNBT(tags);
-		tags.setInteger("Count", stackSize);
-		tags.setString("OreDict", oreDict);
+		baseStack.write(tags);
+		tags.putInt("Count", stackSize);
 		return tags;
 	}
 }

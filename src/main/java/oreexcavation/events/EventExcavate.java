@@ -1,10 +1,9 @@
 package oreexcavation.events;
 
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.common.eventhandler.Event;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.event.TickEvent.Phase;
+import net.minecraftforge.eventbus.api.Event;
 import oreexcavation.handlers.MiningAgent;
 
 public abstract class EventExcavate extends Event
@@ -51,17 +50,17 @@ public abstract class EventExcavate extends Event
 	
 	public static class Break extends EventExcavate
     {
-        private final IBlockState state;
+        private final BlockState state;
         private final BlockPos pos;
         
-        public Break(MiningAgent agent, IBlockState state, BlockPos pos)
+        public Break(MiningAgent agent, BlockState state, BlockPos pos)
         {
             super(agent);
             this.state = state;
             this.pos = pos;
         }
         
-        public IBlockState getBlockState()
+        public BlockState getBlockState()
         {
             return this.state;
         }

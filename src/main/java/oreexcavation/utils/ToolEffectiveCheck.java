@@ -1,29 +1,30 @@
 package oreexcavation.utils;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemShears;
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
+import net.minecraft.item.ShearsItem;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IShearable;
+import net.minecraftforge.common.ToolType;
 import oreexcavation.core.ExcavationSettings;
 
 public class ToolEffectiveCheck
 {
-	public static boolean canHarvestBlock(World world, IBlockState state, BlockPos pos, EntityPlayer player)
+	public static boolean canHarvestBlock(World world, BlockState state, BlockPos pos, PlayerEntity player)
 	{
 		if(world == null || state == null || pos == null || player == null)
 		{
 			return false;
 		}
 		
-		ItemStack held = player.getHeldItem(EnumHand.MAIN_HAND);
+		ItemStack held = player.getHeldItem(Hand.MAIN_HAND);
 		
 		if(ExcavationSettings.openHand && held.isEmpty())
 		{
-			return state.getBlock().canHarvestBlock(world, pos, player);
+			return state.getBlock().canHarvestBlock(state, world, pos, player);
 		} else if(ExcavationSettings.toolClass)
 		{
 			if(held.isEmpty())
@@ -31,17 +32,17 @@ public class ToolEffectiveCheck
 				return false;
 			}
 			
-			if(held.getItem() instanceof ItemShears && state.getBlock() instanceof IShearable)
+			if(held.getItem() instanceof ShearsItem && state.getBlock() instanceof IShearable)
 			{
 				return true;
 			}
 			
-			for(String type : held.getItem().getToolClasses(held))
+			for(ToolType type : held.getItem().getToolTypes(held))
 			{
-				if(type.equalsIgnoreCase(state.getBlock().getHarvestTool(state)) && held.getItem().getHarvestLevel(held, type, player, state) >= state.getBlock().getHarvestLevel(state))
+				if(type == state.getBlock().getHarvestTool(state) && held.getItem().getHarvestLevel(held, type, player, state) >= state.getBlock().getHarvestLevel(state))
 				{
 					return true;
-				} else if(state.getBlock().isToolEffective(type, state))
+				} else if(state.getBlock().isToolEffective(state, type))
 				{
 					return true;
 				}
@@ -56,11 +57,11 @@ public class ToolEffectiveCheck
 			}
 		}
 		
-		if(!held.isEmpty() && held.getItem() instanceof ItemShears && state.getBlock() instanceof IShearable)
+		if(!held.isEmpty() && held.getItem() instanceof ShearsItem && state.getBlock() instanceof IShearable)
 		{
 			return true;
 		}
 		
-		return state.getBlock().canHarvestBlock(world, pos, player);
+		return state.getBlock().canHarvestBlock(state, world, pos, player);
 	}
 }

@@ -1,67 +1,72 @@
 package oreexcavation.core;
 
-import net.minecraft.command.ServerCommandManager;
 import net.minecraft.server.MinecraftServer;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.fml.common.Loader;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import oreexcavation.core.proxies.CommonProxy;
+import net.minecraftforge.fml.config.ModConfig.Type;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.fml.network.simple.SimpleChannel;
+import oreexcavation.client.ExcavationKeys;
 import oreexcavation.handlers.ConfigHandler;
+import oreexcavation.handlers.EventHandler;
+import oreexcavation.network.ExcPacketHandler;
+import oreexcavation.network.PacketExcavation;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = OreExcavation.MODID, version = "@VERSION@", name = OreExcavation.NAME, guiFactory = OreExcavation.MODID + ".handlers.ConfigGuiFactory")
+@Mod(OreExcavation.MODID)
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class OreExcavation
 {
     public static final String MODID = "oreexcavation";
     public static final String NAME = "OreExcavation";
-    public static final String PROXY = MODID + ".core.proxies";
-    public static final String CHANNEL = "OE_CHAN";
+    public static final String CHANNEL = "oe_chan";
+    public static final String NET_PROTOCOL = "1.0.0";
+    public static final String GUI_FACTORY = "oreexcavation.handlers.ConfigGuiFactory";
     
-    @Instance(MODID)
     public static OreExcavation instance;
     
-    @SidedProxy(clientSide = PROXY + ".ClientProxy", serverSide = PROXY + ".CommonProxy")
-    public static CommonProxy proxy;
-    public SimpleNetworkWrapper network;
-    public static Logger logger;
+    public SimpleChannel network;
+    public static Logger logger = LogManager.getLogger(MODID);
     
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event)
+    public OreExcavation()
     {
-        logger = event.getModLog();
-        network = NetworkRegistry.INSTANCE.newSimpleChannel(CHANNEL);
+        instance = this;
         
-        ConfigHandler.config = new Configuration(event.getSuggestedConfigurationFile(), true);
-        ConfigHandler.initConfigs();
+        ModLoadingContext.get().registerConfig(Type.COMMON, ConfigHandler.commonSpec);
+        ModLoadingContext.get().registerConfig(Type.CLIENT, ConfigHandler.clientSpec);
         
-        proxy.registerHandlers();
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
+        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerStart);
+        FMLJavaModLoadingContext.get().getModEventBus().register(ConfigHandler.class);
     }
     
-    @EventHandler
-    public void init(FMLInitializationEvent event)
+    public void setup(final FMLCommonSetupEvent event)
     {
+        network = NetworkRegistry.newSimpleChannel(new ResourceLocation(MODID, CHANNEL), () -> NET_PROTOCOL, NET_PROTOCOL::equalsIgnoreCase, NET_PROTOCOL::equalsIgnoreCase);
+		network.registerMessage(0, PacketExcavation.class, PacketExcavation::toBytes, PacketExcavation::new, ExcPacketHandler.INSTANCE);
+		
+		MinecraftForge.EVENT_BUS.register(EventHandler.class);
+        
+        ExcavationSettings.gamestagesInstalled = ModList.get().isLoaded("gamestages");
     }
     
-    @EventHandler
-    public void postInit(FMLPostInitializationEvent event)
+    public void clientSetup(final FMLClientSetupEvent event)
     {
-        ExcavationSettings.gamestagesInstalled = Loader.isModLoaded("gamestages");
+		ExcavationKeys.registerKeys();
     }
     
-    @EventHandler
     public void onServerStart(FMLServerStartingEvent event)
     {
         MinecraftServer server = event.getServer();
-        ((ServerCommandManager)server.getCommandManager()).registerCommand(new CommandUndo());
-        ((ServerCommandManager)server.getCommandManager()).registerCommand(new CommandUndoForced());
+        CommandUndo.register(server.getCommandManager().getDispatcher());
     }
 }

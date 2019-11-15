@@ -1,7 +1,7 @@
 package oreexcavation.undo;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.block.BlockState;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -11,10 +11,10 @@ import oreexcavation.core.OreExcavation;
 public class BlockHistory
 {
     public final BlockPos pos;
-    public final IBlockState state;
-    public final NBTTagCompound tileData;
+    public final BlockState state;
+    public final CompoundNBT tileData;
     
-    public BlockHistory(BlockPos pos, IBlockState state, NBTTagCompound tileData)
+    public BlockHistory(BlockPos pos, BlockState state, CompoundNBT tileData)
     {
         this.pos = pos;
         this.state = state;
@@ -28,11 +28,11 @@ public class BlockHistory
         
         if(snapshot.getTileEntity() != null)
         {
-            tileData = new NBTTagCompound();
+            tileData = new CompoundNBT();
             
             try
             {
-                snapshot.getTileEntity().writeToNBT(tileData);
+                snapshot.getTileEntity().write(tileData);
             } catch(Exception e)
             {
                 OreExcavation.logger.error("Unable to save undo state for tile entity: " + snapshot.getTileEntity().toString(), e);
@@ -43,7 +43,7 @@ public class BlockHistory
         }
     }
     
-    public BlockHistory(BlockSnapshot snapshot, NBTTagCompound tileNBT)
+    public BlockHistory(BlockSnapshot snapshot, CompoundNBT tileNBT)
     {
         this.pos = snapshot.getPos();
         this.state = snapshot.getReplacedBlock();
@@ -57,7 +57,7 @@ public class BlockHistory
         
         if(tile != null && tileData != null)
         {
-            tile.readFromNBT(tileData);
+            tile.read(tileData);
         }
     }
 }

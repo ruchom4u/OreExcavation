@@ -2,77 +2,67 @@ package oreexcavation.groups;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.OreIngredient;
+import net.minecraft.util.StringUtils;
 import oreexcavation.core.OreExcavation;
+import oreexcavation.utils.TagIngredient;
 import org.apache.logging.log4j.Level;
 
 @SuppressWarnings("WeakerAccess")
 public class ItemEntry
 {
+    public final boolean isWildcard;
 	public final ResourceLocation idName;
-	public final OreIngredient oreDict;
-	public final int subType;
+	public final TagIngredient tagIng;
 	
-    public ItemEntry(ResourceLocation idName, int subType)
+	public ItemEntry()
+    {
+        this.idName = null;
+        this.tagIng = null;
+        this.isWildcard = true;
+    }
+	
+    public ItemEntry(ResourceLocation idName)
 	{
 		this.idName = idName;
-		this.subType = subType;
-		
-		this.oreDict = null;
+		this.tagIng = null;
+		this.isWildcard = false;
 	}
 	
-	public ItemEntry(String oreDict)
+	public ItemEntry(String tagName)
 	{
-		this.oreDict = new OreIngredient(oreDict);
-		
+		this.tagIng = StringUtils.isNullOrEmpty(tagName) ? null : new TagIngredient(tagName);
 		this.idName = null;
-		this.subType = -1;
+		this.isWildcard = false;
 	}
 	
 	public boolean checkMatch(ItemStack stack)
 	{
-		if(stack == null || stack.isEmpty())
-		{
-			return false;
-		} else if(idName == null)
-		{
-			return checkOre(stack);
-		}
-		
-		return idName.equals(stack.getItem().getRegistryName()) && (subType < 0 || subType == OreDictionary.WILDCARD_VALUE || subType == stack.getMetadata());
-	}
-	
-	private boolean checkOre(ItemStack stack)
-	{
-	    return oreDict != null && oreDict.apply(stack);
+		if(stack == null || stack.isEmpty()) return false;
+		if(isWildcard) return true;
+		if(tagIng != null && tagIng.apply(stack)) return true;
+		return idName != null && idName.equals(stack.getItem().getRegistryName());
 	}
 	
 	public static ItemEntry readFromString(String s)
 	{
 		if(s == null || s.length() <= 0) return null;
+		if(s.equalsIgnoreCase("*")) return new ItemEntry();
 		
 		String[] split = s.split(":");
 		
-		if(split.length <= 0 || split.length > 3) // Invalid
+		if(split.length <= 1 || split.length > 3) // Invalid
 		{
+            OreExcavation.logger.log(Level.WARN, "Invalid Item Entry format: " + s);
 			return null;
-		} else if(split.length == 1) // Ore Dictionary
-		{
-			return new ItemEntry(split[0]);
 		} else if(split.length == 2) // Simple ID
 		{
-			return new ItemEntry(new ResourceLocation(split[0], split[1]), -1);
-		} else // ID and Subtype
+			return new ItemEntry(new ResourceLocation(split[0], split[1]));
+		} else if(s.startsWith("tag:"))
 		{
-			try
-			{
-				return new ItemEntry(new ResourceLocation(split[0], split[1]), Integer.parseInt(split[2]));
-			} catch(Exception e)
-			{
-				OreExcavation.logger.log(Level.ERROR, "Unable to read metadata value for Item Entry \"" + s + "\":", e);
-				return null;
-			}
+			return new ItemEntry(s.replaceFirst("tag:", ""));
 		}
+		
+        OreExcavation.logger.log(Level.WARN, "Invalid Item Entry format: " + s);
+		return null;
 	}
 }
