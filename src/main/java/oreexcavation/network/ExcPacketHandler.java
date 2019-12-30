@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 
 public class ExcPacketHandler implements BiConsumer<PacketExcavation, Supplier<NetworkEvent.Context>>
 {
-    public static ExcPacketHandler INSTANCE = new ExcPacketHandler();
+    public static final ExcPacketHandler INSTANCE = new ExcPacketHandler();
     
     public void accept(PacketExcavation packet, Supplier<NetworkEvent.Context> context)
     {

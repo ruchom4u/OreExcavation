@@ -58,6 +58,7 @@ public class MiningScheduler
         
         MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
         a.dropEverything();
+        appendHistory(a.getPlayerID(), a.getHistory());
         agents.remove(a);
     }
 	
