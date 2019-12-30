@@ -1,6 +1,5 @@
 package oreexcavation.core;
 
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.ModList;
@@ -45,7 +44,6 @@ public class OreExcavation
         
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::clientSetup);
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::onServerStart);
         FMLJavaModLoadingContext.get().getModEventBus().register(ConfigHandler.class);
     }
     
@@ -55,6 +53,7 @@ public class OreExcavation
 		network.registerMessage(0, PacketExcavation.class, PacketExcavation::toBytes, PacketExcavation::new, ExcPacketHandler.INSTANCE);
 		
 		MinecraftForge.EVENT_BUS.register(EventHandler.class);
+        MinecraftForge.EVENT_BUS.addListener(this::onServerStart);
         
         ExcavationSettings.gamestagesInstalled = ModList.get().isLoaded("gamestages");
     }
@@ -66,7 +65,6 @@ public class OreExcavation
     
     public void onServerStart(FMLServerStartingEvent event)
     {
-        MinecraftServer server = event.getServer();
-        CommandUndo.register(server.getCommandManager().getDispatcher());
+        CommandUndo.register(event.getCommandDispatcher());
     }
 }

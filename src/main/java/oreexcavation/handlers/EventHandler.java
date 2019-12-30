@@ -222,7 +222,7 @@ public class EventHandler
 			{
 				canContinue = false;
 			}
-		} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getInstance().player.isSneaking())
+		} else if(ExcavationSettings.mineMode != 2 && !Minecraft.getInstance().player.func_225608_bj_())
 		{
 			canContinue = false;
 		}

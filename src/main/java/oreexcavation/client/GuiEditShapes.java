@@ -19,6 +19,7 @@ public class GuiEditShapes extends Screen
 {
 	private static final ResourceLocation GUI_TEX = new ResourceLocation(OreExcavation.MODID, "textures/gui/edit_shapes.png");
 	private static final ResourceLocation GUI_ICO = new ResourceLocation("minecraft:textures/gui/icons.png");
+	private static final ResourceLocation SPRITE_STONE = new ResourceLocation("minecraft:block/stone");
 	
 	private int guiLeft = 0;
 	private int guiTop = 0;
@@ -93,12 +94,13 @@ public class GuiEditShapes extends Screen
 		
 		super.render(mx, my, partialTick);
 		
-		GlStateManager.color4f(1F, 1F, 1F, 1F);
+		GlStateManager.func_227702_d_(1F, 1F, 1F, 1F);
 		
 		if(curShape != null)
 		{
 			int mask = curShape.getShapeMask();
 			int off = curShape.getReticle();
+            TextureAtlasSprite spr = minecraft.func_228015_a_(AtlasTexture.LOCATION_BLOCKS_TEXTURE).apply(SPRITE_STONE);
 			
 			for(int x = 0; x < 5; x++)
 			{
@@ -111,12 +113,11 @@ public class GuiEditShapes extends Screen
 						minecraft.getTextureManager().bindTexture(AtlasTexture.LOCATION_BLOCKS_TEXTURE);
 						
 						// Draw stone scaled x2
-						GlStateManager.pushMatrix();
-						GlStateManager.translatef(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
-						GlStateManager.scalef(2F, 2F, 1F);
-                        TextureAtlasSprite spr = minecraft.getTextureMap().getAtlasSprite("minecraft:block/stone");
+						GlStateManager.func_227626_N_();
+						GlStateManager.func_227688_c_(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
+						GlStateManager.func_227672_b_(2F, 2F, 1F);
 						blit(0, 0, 0, 16, 16, spr);
-						GlStateManager.popMatrix();
+						GlStateManager.func_227627_O_();
 					}
 					
 					if(off == (y * 5) + x)
@@ -124,11 +125,11 @@ public class GuiEditShapes extends Screen
 						minecraft.getTextureManager().bindTexture(GUI_ICO);
 						
 						// Draw reticle scaled x2
-						GlStateManager.pushMatrix();
-						GlStateManager.translatef(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
-						GlStateManager.scalef(2F, 2F, 1F);
+						GlStateManager.func_227626_N_();
+						GlStateManager.func_227688_c_(guiLeft + 176 - (x * 32), guiTop + 176 - (y * 32), 0F);
+						GlStateManager.func_227672_b_(2F, 2F, 1F);
 						blit(0, 0, 0, 0, 16, 16);
-						GlStateManager.popMatrix();
+						GlStateManager.func_227627_O_();
 					}
 				}
 			}

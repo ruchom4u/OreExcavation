@@ -340,6 +340,7 @@ public class MiningAgent
 		
 		history.setRecievedStacks(drops);
 		history.setRecievedXP(experience);
+        BlockPos pPos = player.getPosition();
 		
 		for(BigItemStack bigStack : drops)
 		{
@@ -351,7 +352,7 @@ public class MiningAgent
 					this.player.world.addEntity(eItem);
 				} else
 				{
-					ItemEntity eItem = new ItemEntity(this.player.world, player.posX, player.posY, player.posZ, stack);
+					ItemEntity eItem = new ItemEntity(this.player.world, pPos.getX(), pPos.getY(), pPos.getZ(), stack);
 					this.player.world.addEntity(eItem);
 				}
 			}
@@ -363,7 +364,7 @@ public class MiningAgent
 			
 			if(ExcavationSettings.autoPickup)
 			{
-				orb = new ExperienceOrbEntity(this.player.world, player.posX, player.posY, player.posZ, experience);
+				orb = new ExperienceOrbEntity(this.player.world, pPos.getX(), pPos.getY(), pPos.getZ(), experience);
 			} else
 			{
 				orb = new ExperienceOrbEntity(this.player.world, origin.getX(), origin.getY(), origin.getZ(), experience);
