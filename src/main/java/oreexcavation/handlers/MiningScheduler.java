@@ -62,6 +62,7 @@ public class MiningScheduler
         
         MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
         a.dropEverything();
+        //a.syncChunks();
         appendHistory(a.getPlayerID(), a.getHistory());
         agents.remove(a);
     }
@@ -169,11 +170,7 @@ public class MiningScheduler
 			}
 			
 			MiningAgent a = agents.poll();
-			
-			if(a == null)
-			{
-				continue;
-			}
+			if(a == null) continue;
 			
 			EventHandler.captureAgent = a;
 			boolean complete = a.tickMiner(timer);
@@ -184,6 +181,7 @@ public class MiningScheduler
 				MinecraftForge.EVENT_BUS.post(new EventExcavate.Post(a));
 				
 				a.dropEverything();
+				//a.syncChunks();
 				appendHistory(a.getPlayerID(), a.getHistory());
 			} else
 			{

@@ -131,6 +131,8 @@ public class BlockGroups
 			}
 		}
 		
+		staged.clear();
+		
 		for(Entry<String, JsonElement> entry : JsonHelper.GetObject(json, "gamestages").entrySet())
 		{
 			if(entry.getValue() == null || !entry.getValue().isJsonPrimitive())

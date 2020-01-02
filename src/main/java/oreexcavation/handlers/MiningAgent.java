@@ -1,16 +1,9 @@
 package oreexcavation.handlers;
 
-import java.lang.reflect.Method;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
+import com.google.common.base.Stopwatch;
 import net.darkhax.gamestages.data.GameStageSaveHandler;
 import net.darkhax.gamestages.data.IStageData;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
@@ -20,15 +13,17 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.StringUtils;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import oreexcavation.core.ExcavationSettings;
 import oreexcavation.core.OreExcavation;
@@ -47,7 +42,13 @@ import oreexcavation.utils.BigItemStack;
 import oreexcavation.utils.ToolEffectiveCheck;
 import oreexcavation.utils.XPHelper;
 import org.apache.logging.log4j.Level;
-import com.google.common.base.Stopwatch;
+
+import java.lang.reflect.Method;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @SuppressWarnings("WeakerAccess")
 public class MiningAgent
@@ -339,6 +340,13 @@ public class MiningAgent
 		
 		return scheduled.size() <= 0 || minedBlocks.size() >= toolProps.getLimit() || MinecraftForge.EVENT_BUS.post(new Pass(this, Phase.END));
 	}
+	
+	/*public void syncChunks()
+    {
+        MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+        WorldServer worldServer = server == null ? null : server.getWorld(player.world.provider.getDimension());
+        if(worldServer != null) minedBlocks.forEach((pos) -> worldServer.getPlayerChunkMap().markBlockForUpdate(pos));
+    }*/
 	
 	/**
 	 * Appends a block position to the miners current pass
