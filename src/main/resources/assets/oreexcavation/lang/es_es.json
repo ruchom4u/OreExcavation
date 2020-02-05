@@ -1,0 +1,12 @@
+{
+  "oreexcavation.key.excavate": "Escavar",
+  "oreexcavation.key.shape_toggle": "Cambiar forma",
+  "oreexcavation.key.shape_edit": "Editar forma",
+
+  "oreexcavation.undo.success": "Deshaciendo la última escavación....",
+  "oreexcavation.undo.failed.xp": "Fallo al deshacer: no se pudo devolver la experiencia",
+  "oreexcavation.undo.failed.items": "Fallo al deshacer: no se pudieron devolver los objetos",
+  "oreexcavation.undo.failed.obstructed": "Fallo al deshacer: área obstruida",
+  "oreexcavation.undo.failed.no_history": "Fallo al deshacer: nada que deshacer",
+  "oreexcavation.undo.failed.disabled": "¡Deshacer está desactivado!"
+}
